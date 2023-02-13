@@ -1,0 +1,107 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              02/10/2022 22:47:25 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: E:\SCM\keil 4\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\m
+                    -ain.lst) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "reg52.h"
+   2          #include "lcd1602.h"
+   3          
+   4          #define GPIO_KEY P1
+   5          
+   6          typedef unsigned int u16;         //对数据类型进行声明定义
+   7          typedef unsigned char u8;
+   8          
+   9          unsigned char KeyValue; //存放读取到的键值
+  10          unsigned char KeyState; //用来存放按键状态
+  11          unsigned char Confident[]="You Can ";
+  12          unsigned char dat[]="0123456789ABCDEF";
+  13          
+  14          void Delay10ms(); //延时50us
+  15          void KeyDowm(); //按键检测函数
+  16          
+  17          void main()
+  18          {
+  19   1              u8 i;
+  20   1              LcdInit();
+  21   1              KeyState=0;
+  22   1              for(i=0;i<8;i++)
+  23   1              {
+  24   2                      LCDWriteData(Confident[i]);
+  25   2              }
+  26   1              while(1)
+  27   1              {
+  28   2                      KeyDowm();
+  29   2                      if(KeyState)
+  30   2                      {
+  31   3                              KeyState=0;
+  32   3                              LcdWriteCom(0x80+0x40);
+  33   3                              LCDWriteData(dat[KeyValue]);
+  34   3                      }
+  35   2              }
+  36   1      }
+  37          
+  38          void KeyDowm()
+  39          {
+  40   1              char a;
+  41   1              GPIO_KEY=0x0f;
+  42   1              if(GPIO_KEY!=0x0f)
+  43   1              {
+  44   2                      Delay10ms();
+  45   2                      if(GPIO_KEY!=0x0f)
+  46   2                      {
+  47   3                              KeyState=1;
+  48   3                              GPIO_KEY=0x0f;
+  49   3                              Delay10ms();
+  50   3                              switch(GPIO_KEY)
+  51   3                              {
+  52   4                                      case(0x07):KeyValue=0;break;
+  53   4                                      case(0x0b):KeyValue=1;break;
+  54   4                                      case(0x0d):KeyValue=2;break;
+C51 COMPILER V9.59.0.0   MAIN                                                              02/10/2022 22:47:25 PAGE 2   
+
+  55   4                                      case(0x0e):KeyValue=3;break;
+  56   4                              }
+  57   3                              GPIO_KEY=0xf0;
+  58   3                              Delay10ms();
+  59   3                              switch(GPIO_KEY)
+  60   3                              {
+  61   4                                      case(0x70):KeyValue=KeyValue;break;
+  62   4                                      case(0xb0):KeyValue=KeyValue+4;break;
+  63   4                                      case(0xd0):KeyValue=KeyValue+8;break;
+  64   4                                      case(0xe0):KeyValue=KeyValue+12;break;
+  65   4                              }
+  66   3              }
+  67   2                      while((a<50)&&(GPIO_KEY!=0xf0))
+  68   2                      {
+  69   3                              Delay10ms();
+  70   3                              a++;
+  71   3                      }
+  72   2              }
+  73   1      }
+  74                  
+  75          void Delay10ms()   //误差 0us
+  76          {
+  77   1          unsigned char a,b,c;
+  78   1          for(c=1;c>0;c--)
+  79   1              for(b=38;b>0;b--)
+  80   1                  for(a=130;a>0;a--);
+  81   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    246    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     28       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

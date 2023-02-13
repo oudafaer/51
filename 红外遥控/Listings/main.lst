@@ -1,0 +1,36 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              02/17/2022 13:43:37 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: E:\SCM\keil 4\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\m
+                    -ain.lst) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "IrReceive.h"
+*** WARNING C318 IN LINE 4 OF IrReceive.h: can't open file 'delay.h'
+*** ERROR C141 IN LINE 7 OF IrReceive.h: syntax error near 'uchar', expected 'bit'
+*** ERROR C129 IN LINE 7 OF IrReceive.h: missing ';' before 'usercode'
+   2          #include "lcd1602.h"
+*** WARNING C318 IN LINE 2 OF main.c: can't open file 'lcd1602.h'
+   3          
+   4          void main(void)
+   5          {
+   6                  uchar buf[16];
+   7                  irReceiveInit();
+   8                  lcd1602Init();  //LCD初始化
+   9                  lcd1602Clear(); //清屏
+  10                  
+  11                  while(1)
+  12                  {
+  13                          if(IrValue.ok==1)//接收解码完成
+  14                          {
+  15                                  sprintf(buf,"%d",IrValue.cmd); //组包；
+  16                                  lcd1602WriteString(0,0,buf); //打印字符串
+  17                                  IrValue.ok=0;//每按下一次显示一次；
+  18                          }
+  19                  }
+  20          }
+
+C51 COMPILATION COMPLETE.  2 WARNING(S),  2 ERROR(S)
