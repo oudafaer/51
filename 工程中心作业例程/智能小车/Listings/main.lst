@@ -1,0 +1,140 @@
+C51 COMPILER V9.60.0.0   MAIN                                                              04/14/2022 23:33:38 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: E:\MDK5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main.ls
+                    -t) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "reg52.h"
+   2          #include "Delay.h"
+   3          #include "Timer0.h"
+   4          #include "nixie.h"
+   5          #include "uart.h"
+   6          #include "L298N.h"
+   7          
+   8          sbit ENA = P1^4; //使能A
+   9          sbit ENB = P1^5; //使能B
+  10          
+  11          unsigned char PWM; //PWM波
+  12          unsigned char date;//输入缓冲区
+  13          extern  unsigned char speed = 100; //设置速度初始值
+  14          
+  15          
+  16          int main(void)  
+  17          {
+  18   1              UsartConfiguration(); // 串口初始化
+  19   1              Timer0Init();//定时器0初始化
+  20   1              while(1)
+  21   1              {
+  22   2                      //在数码管可以看到当前的速度是多少
+  23   2                      Nixie(1, speed/100);
+  24   2                      delay(5);
+  25   2                      Nixie(2, (speed/10)%10);
+  26   2                      delay(5);
+  27   2                      Nixie(3, speed%10);
+  28   2                      delay(5);
+  29   2                      //启动避障模式，将此模式存放在主函数当中
+  30   2              }
+  31   1      }
+  32          
+  33          //串口中断
+  34          void Time_Int () interrupt 4
+  35          {
+  36   1              if(RI == 1) // RI为1时软件置0
+  37   1              {
+  38   2                      RI = 0; // 清除接受标志
+  39   2                      date = SBUF; // 接收数据缓存在date中
+  40   2                      switch (date)
+  41   2                      {
+  42   3                              case ('1'):
+  43   3                              {
+  44   4                                      forward();
+  45   4                                      break;
+  46   4                              }
+  47   3                              case ('2'):
+  48   3                              {
+  49   4                                      back();
+  50   4                                      break;
+  51   4                              }
+  52   3                              case ('3'):
+  53   3                              {
+  54   4                                      avoid_left();
+C51 COMPILER V9.60.0.0   MAIN                                                              04/14/2022 23:33:38 PAGE 2   
+
+  55   4                                      break;
+  56   4                              }
+  57   3                              case ('4'):
+  58   3                              {
+  59   4                                      avoid_right();
+  60   4                                      break;
+  61   4                              }
+  62   3                              case ('0'):
+  63   3                              {
+  64   4                                      stop();
+  65   4                                      break;
+  66   4                              }
+  67   3                              case ('5'):
+  68   3                              {
+  69   4                                      increase();
+  70   4                                      break;
+  71   4                              }
+  72   3                              case ('6'):
+  73   3                              {
+  74   4                                      reduce();
+  75   4                                      break;
+  76   4                              }                       
+  77   3                              case ('7'):
+  78   3                              {
+  79   4                                      increase();
+  80   4                                      break;
+  81   4                              }
+  82   3                              case ('8'):
+  83   3                              {
+  84   4                                      reduce();
+  85   4                                      break;
+  86   4                              }
+  87   3                              
+  88   3                      }
+  89   2              }
+  90   1      }
+  91           //定时器0
+  92          void time_control() interrupt 1
+  93          {
+  94   1              TL0 = 0x66;             //设置定时初值
+  95   1              TH0 = 0xFC;             //设置定时初值
+  96   1              PWM++;
+  97   1              if (PWM == 100)
+  98   1              {
+  99   2                      PWM = 0;
+ 100   2              }
+ 101   1              if(PWM <= speed)//大于PWM波则打开使能
+ 102   1              {
+ 103   2                      ENA = 1;
+ 104   2                      ENB = 1;
+ 105   2              }
+ 106   1              if(PWM > speed)//小于PWM波则关闭使能
+ 107   1              {
+ 108   2                      ENA = 0;
+ 109   2                      ENB = 0;
+ 110   2              }
+ 111   1      }
+ 112           
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    277    ----
+C51 COMPILER V9.60.0.0   MAIN                                                              04/14/2022 23:33:38 PAGE 3   
+
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      3    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

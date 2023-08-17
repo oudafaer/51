@@ -1,0 +1,34 @@
+C51 COMPILER V9.60.0.0   INT0                                                              04/13/2022 16:41:01 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE INT0
+OBJECT MODULE PLACED IN .\Objects\INT0.obj
+COMPILER INVOKED BY: E:\MDK5\C51\BIN\C51.EXE INT0.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\INT0.ls
+                    -t) OBJECT(.\Objects\INT0.obj)
+
+line level    source
+
+   1          #include "reg52.h"
+   2          
+   3          void Int0_Init(void)
+   4          {
+   5   1              IT0=1;
+   6   1              IE0=0;
+   7   1              EX0=1;
+   8   1              EA=1;
+   9   1              PX0=1; 
+  10   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     11    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

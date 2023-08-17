@@ -1,0 +1,60 @@
+C51 COMPILER V9.01   SMG                                                                   01/02/2018 20:55:21 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE SMG
+OBJECT MODULE PLACED IN smg.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE smg.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include "reg51.h"
+   2           
+   3          
+   4          unsigned char cnt,n,zxm[]={0x40,0xf9,0x24,0x30,0x19,0x12,0x02,0xf8,0x0,0x10};
+   5          bit sec;
+   6          
+   7          void T0Ser() interrupt 1
+   8          {
+   9   1         TH0=-50000>>8;
+  10   1         TL0=-50000;
+  11   1      
+  12   1         if(++cnt==20)
+  13   1         {
+  14   2            cnt=0;
+  15   2                sec=1;
+  16   2         } 
+  17   1      }
+  18           
+  19          
+  20          void main()
+  21          { 
+  22   1         TMOD=0X01;
+  23   1         IE=0X82;
+  24   1         TR0=1;  
+  25   1         while(1)
+  26   1         {
+  27   2            if(sec)
+  28   2                {
+  29   3                   sec=0;
+  30   3                       P2=zxm[n];
+  31   3      
+  32   3                       if(++n>9)
+  33   3                          n=0;
+  34   3                        
+  35   3                }
+  36   2         }
+  37   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     62    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     12    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,57 @@
+C51 COMPILER V9.60.0.0   TIME0R                                                            04/12/2022 12:53:35 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE TIME0R
+OBJECT MODULE PLACED IN .\Objects\Time0r.obj
+COMPILER INVOKED BY: E:\MDK5\C51\BIN\C51.EXE Time0r.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\Time0
+                    -r.lst) OBJECT(.\Objects\Time0r.obj)
+
+line level    source
+
+   1          #include "reg52.h"
+   2           
+   3          /**
+   4             * @brief  定时器0，1毫秒@11.0592MHz
+   5             * @param  无
+   6             * @retval 无
+   7             */
+   8          void Timer0Init(void)           //1毫秒@11.0592MHz
+   9          {
+  10   1              TMOD &= 0xF0;           //设置定时器模式
+  11   1              TMOD |= 0x01;           //设置定时器模式
+  12   1              TL0 = 0x66;             //设置定时初值
+  13   1              TH0 = 0xFC;             //设置定时初值
+  14   1              TF0 = 0;                //清除TF0标志
+  15   1              TR0 = 1;                //定时器0开始计时
+  16   1              ET0 = 1;                //定时器开关
+  17   1              EA = 1;                 //总开关
+  18   1      }
+  19          /*模板
+  20                  void time_control() interrupt 1
+  21                  {
+  22                          static unsigned int counst;//局部变量，静态变量，防止每次进入中断，都将counst置为0
+  23                          TL0 = 0x66;             //设置定时初值
+  24                          TH0 = 0xFC;             //设置定时初值
+  25                          counst++;
+  26                          if (counst == 1000)
+  27                          {
+  28                                  counst = 0;
+  29                                  
+  30                          }
+  31                  
+  32                  }
+  33          */
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     21    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

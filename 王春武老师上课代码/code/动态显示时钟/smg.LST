@@ -1,0 +1,203 @@
+C51 COMPILER V9.01   SMG                                                                   07/18/2018 16:13:28 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE SMG
+OBJECT MODULE PLACED IN smg.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE smg.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include "reg51.h"
+   2          
+   3          sbit a=P1^5;
+   4          sbit b=P1^3;
+   5          sbit c=P1^1;
+   6          sbit Lock=P3^2;
+   7          sbit Dat=P3^7;
+   8          sbit Clk=P3^6;
+   9          sbit SET=P2^0;   //设置开关
+  10          sbit ADD=P2^2;    //调整参数开关
+  11          sbit SUB=P2^4;  
+  12          
+  13          
+  14          void Send(unsigned char n);      
+  15          void CS(unsigned char n);
+  16          
+  17          char state,hour,minute,second,pos;
+  18          unsigned char cnt,buf[8]={0,0,0,0,0,0,2,1},zxm[]={0xfc,0x60,0xda,0xf2,0x66,0xb6,0xbe,0xe0,0xfe,0xf6};
+  19          bit sec,key_mark;
+  20          
+  21          void delay()
+  22          {
+  23   1         char i,j;
+  24   1      
+  25   1         for(i=0;i<4;i++)
+  26   1           for(j=0;j<100;j++);
+  27   1      
+  28   1      }
+  29          
+  30          void T0Ser() interrupt 1
+  31          {
+  32   1         TH0=-5000>>8;
+  33   1         TL0=-5000;
+  34   1      
+  35   1         if(++cnt==200)
+  36   1         {
+  37   2            cnt=0;
+  38   2                sec=1;
+  39   2         }
+  40   1         
+  41   1         if(++pos>5)
+  42   1            pos=0;
+  43   1      
+  44   1         CS(pos);
+  45   1      
+  46   1         if(pos==2||pos==4)
+  47   1            Send(zxm[buf[pos]] | 1); 
+  48   1         else
+  49   1            Send(zxm[buf[pos]]); 
+  50   1        
+  51   1      }
+  52          
+  53          void CS(unsigned char n)
+  54          {
+  55   1         c=n/4;
+C51 COMPILER V9.01   SMG                                                                   07/18/2018 16:13:28 PAGE 2   
+
+  56   1         b=n%4/2;
+  57   1         a=n%2;   
+  58   1      }
+  59          
+  60          void Send(unsigned char n)
+  61          {
+  62   1         char i;
+  63   1      
+  64   1         for(i=0;i<8;i++)
+  65   1         {
+  66   2            if(n&1)
+  67   2                  Dat=1;
+  68   2                else
+  69   2                  Dat=0;
+  70   2                
+  71   2                Clk=0;
+  72   2                Clk=1;
+  73   2                n>>=1;                  
+  74   2         }
+  75   1         Lock=0;
+  76   1         Lock=1;
+  77   1      }
+  78          
+  79          void key()
+  80          {
+  81   1         if(!SET)
+  82   1         {
+  83   2            if(++state>3)
+  84   2                  state=0;
+  85   2      
+  86   2         }
+  87   1         else if(!ADD)
+  88   1         {
+  89   2                if(state==1)
+  90   2                 {               
+  91   3                        if(++hour>23)
+  92   3                          hour=0;
+  93   3                 }
+  94   2                else if(state==2)
+  95   2                {          
+  96   3                   if(++minute>59)
+  97   3                          minute=0;
+  98   3                }    
+  99   2                else if(state==3)
+ 100   2                {                 
+ 101   3                   if(++second>59)
+ 102   3                         second=0;
+ 103   3                }
+ 104   2         }
+ 105   1         else if(!SUB)
+ 106   1         {
+ 107   2               {
+ 108   3                if(state==1)
+ 109   3                 {               
+ 110   4                        if(--hour<0)
+ 111   4                          hour=23;
+ 112   4                 }
+ 113   3                else if(state==2)
+ 114   3                {          
+ 115   4                   if(--minute<0)
+ 116   4                          minute=59;
+ 117   4                }    
+C51 COMPILER V9.01   SMG                                                                   07/18/2018 16:13:28 PAGE 3   
+
+ 118   3                else if(state==3)
+ 119   3                {                 
+ 120   4                   if(--second<0)
+ 121   4                         second=59;
+ 122   4                }
+ 123   3         } 
+ 124   2         }
+ 125   1      }
+ 126          
+ 127          void main()
+ 128          { 
+ 129   1         TMOD=0X01;
+ 130   1         IE=0X82;
+ 131   1         TR0=1;  
+ 132   1         hour=12;
+ 133   1         state=0;
+ 134   1      
+ 135   1         while(1)
+ 136   1         {
+ 137   2            if((!SET || !ADD || !SUB) && !key_mark)
+ 138   2                {
+ 139   3                  delay();
+ 140   3                      if(!SET || !ADD || !SUB) 
+ 141   3                      {
+ 142   4                         key_mark=1;
+ 143   4                         key();                 
+ 144   4                      }
+ 145   3                }
+ 146   2                else if(SET && ADD && SUB)
+ 147   2                   key_mark=0;
+ 148   2      
+ 149   2                if(sec)
+ 150   2                {
+ 151   3                      sec=0;
+ 152   3      
+ 153   3                      if(state==0)
+ 154   3                      {
+ 155   4                              if(++second>59)
+ 156   4                              {
+ 157   5                                 second=0;
+ 158   5                                 if(+++minute>59)
+ 159   5                                 {
+ 160   6                                    minute=0;
+ 161   6                                        if(++hour>23)
+ 162   6                                           hour=0;
+ 163   6                                 }                    
+ 164   5                              }
+ 165   4                  }
+ 166   3                      buf[0]=second%10;
+ 167   3                      buf[1]=second/10;
+ 168   3                      buf[2]=minute%10;
+ 169   3                      buf[3]=minute/10;
+ 170   3                      buf[4]=hour%10;
+ 171   3                      buf[5]=hour/10;
+ 172   3                }
+ 173   2         }
+ 174   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    518    ----
+   CONSTANT SIZE    =   ----    ----
+C51 COMPILER V9.01   SMG                                                                   07/18/2018 16:13:28 PAGE 4   
+
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     24    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      2    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

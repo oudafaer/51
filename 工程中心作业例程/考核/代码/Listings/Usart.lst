@@ -1,0 +1,37 @@
+C51 COMPILER V9.59.0.0   USART                                                             12/06/2021 19:45:28 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE USART
+OBJECT MODULE PLACED IN .\Objects\Usart.obj
+COMPILER INVOKED BY: E:\SCM\keil 4\C51\BIN\C51.EXE Usart.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\
+                    -Usart.lst) OBJECT(.\Objects\Usart.obj)
+
+line level    source
+
+   1          #include "reg52.h"
+   2          void Uart_Init(void)
+   3          {
+   4   1          SCON=0x50;                  //串口工作方式1:10位异步收发器，1位起始位，8位数据位，1位停止位;REN=1:允许
+             -接收 
+   5   1      //    PCON=0x00;4800 9600                //SMOD=0:波特率不加倍 
+   6   1          TMOD=0x20;                  //定时器T1工作方式2，8位自动重装载定时器/计数器，用于UART波特率 
+   7   1          TH1=0xFD;                   //定时器初值设置0xFD，单片机晶振11.0592MHz，对应波特率9600
+   8   1          TL1=0x00;                   //无需设置该位，保持为0x00
+   9   1          TR1=1;                          //开启定时器T1，允许T1计数 
+  10   1              ES=1;                       //串口中断允许位置1，开启串口中断
+  11   1          EA=1;                       //总中断允许位，开启总中断
+  12   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     19    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

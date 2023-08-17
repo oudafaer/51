@@ -1,0 +1,72 @@
+C51 COMPILER V9.59.0.0   SMG                                                               12/07/2021 22:14:41 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE SMG
+OBJECT MODULE PLACED IN .\Objects\smg.obj
+COMPILER INVOKED BY: E:\SCM\keil 4\C51\BIN\C51.EXE smg.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\sm
+                    -g.lst) OBJECT(.\Objects\smg.obj)
+
+line level    source
+
+   1          #include <STC89C5xRC.H>
+   2          #include "delay.h"
+   3          
+   4          unsigned char Nixie[]={0xc0,0xcf,0xa4,0xb0,0x99,0x92,0x82,0xf8,0x80,0x90};
+   5          void smg(unsigned int Number)
+   6          {
+   7   1              int a;
+   8   1              int b;
+   9   1              int c;
+  10   1              int d;
+  11   1      
+  12   1              d=Number/1000;
+  13   1              b=Number/100-d*10;
+  14   1              c=Number/10-(Number/100)*10;
+  15   1              a=Number%10;
+  16   1              
+  17   1              while(1)
+  18   1              {
+  19   2                      P24=0;
+  20   2                      P25=1;
+  21   2                      P26=1;
+  22   2                      P27=1;
+  23   2                      P0=Nixie[d];
+  24   2                      delay(1);
+  25   2                      P24=1;
+  26   2                      P25=0;
+  27   2                      P26=1;
+  28   2                      P27=1;
+  29   2                      P0=Nixie[b];
+  30   2                      delay(1);
+  31   2                      P24=1;
+  32   2                      P25=1;
+  33   2                      P26=0;
+  34   2                      P27=1;
+  35   2                      P0=Nixie[c];
+  36   2                      delay(1);
+  37   2                      P24=1;
+  38   2                      P25=1;
+  39   2                      P26=1;
+  40   2                      P27=0;
+  41   2                      P0=Nixie[a];
+  42   2                      delay(1);
+  43   2                      break;
+  44   2                      
+  45   2              }
+  46   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    188    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     10       8
+C51 COMPILER V9.59.0.0   SMG                                                               12/07/2021 22:14:41 PAGE 2   
+
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

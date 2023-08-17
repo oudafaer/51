@@ -1,0 +1,267 @@
+C51 COMPILER V9.01   CLOCK1                                                                12/01/2015 09:04:37 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE CLOCK1
+OBJECT MODULE PLACED IN CLOCK1.OBJ
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE CLOCK1.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          /*工作流程：状态0时 显示 DATA1的值，并得到SIGNE1*/
+   2          /*状态1时 显示 DATA2的值，并得到SIGNE2*/
+   3          #include  "reg51.h"
+   4          
+   5          sbit   SET=P2^0;         //设置开关
+   6          sbit   ADD=P2^1;          //调整参数开关
+   7          sbit   SUB=P2^2;    
+   8          
+   9          sbit   LOCK=     P3^2;
+  10          sbit   CLK=      P3^1;
+  11          sbit   DAT=      P3^0;
+  12          
+  13          sbit   red=      P3^7;
+  14          sbit   green=    P3^6;
+  15          sbit   yellow=   P3^5;
+  16          sbit   speaker=  P1^0;
+  17          
+  18          unsigned char cnt,state,t[6]={0};
+  19          bit    sec,key_mark,half_sec;
+  20          
+  21          void init_timer0()
+  22          {
+  23   1              TMOD=0X01;
+  24   1              TH0=-50000>>8;
+  25   1              TL0=-50000;
+  26   1              IE=0X82;
+  27   1              TR0=1;
+  28   1      }
+  29          
+  30          void timer0()   interrupt 1
+  31          {
+  32   1              TH0=0x3c;
+  33   1              TL0=0xb0;
+  34   1      
+  35   1              if(cnt==10)
+  36   1                half_sec=1,green=0,red=1;
+  37   1      
+  38   1              if(++cnt==20)
+  39   1          {
+  40   2                  sec=1;
+  41   2                      cnt=0;
+  42   2                      red=0,green=1;
+  43   2              }
+  44   1      } 
+  45          
+  46          /*声明用来产生数码管的控制字*/
+  47          unsigned char zxm[]={0x03,0x9f,0x25,0x0d,0x99,0x49,0x41,0x1f,0x01,0x09,0XFD,0XFF,0X61,0XF5,0XC5};
+  48          char hour,minute,second;
+  49          
+  50          void delay()
+  51          {
+  52   1         char i,j;
+  53   1      
+  54   1         for(i=0;i<4;i++)
+  55   1           for(j=0;j<100;j++);
+C51 COMPILER V9.01   CLOCK1                                                                12/01/2015 09:04:37 PAGE 2   
+
+  56   1      
+  57   1      }
+  58          void display()
+  59          {
+  60   1         unsigned char i,j;
+  61   1      
+  62   1         LOCK=0;
+  63   1      
+  64   1         for(i=0;i<6;i++)
+  65   1         {      
+  66   2            for(j=0;j<8;j++)
+  67   2                {
+  68   3                   if(t[i]&1)
+  69   3                         DAT=1;
+  70   3                       else
+  71   3                         DAT=0;
+  72   3                       
+  73   3                       CLK=0;
+  74   3                       CLK=1;
+  75   3                       
+  76   3                       t[i]>>=1;      
+  77   3                }
+  78   2         }
+  79   1         LOCK=1;
+  80   1      }
+  81          
+  82          void key()
+  83          {
+  84   1         if(!SET)
+  85   1         {
+  86   2            if(++state>3)
+  87   2                  state=0;
+  88   2      
+  89   2         }
+  90   1         else if(!ADD)
+  91   1         {
+  92   2                if(state==1)
+  93   2                 {
+  94   3                        hour+=10;
+  95   3                        if(hour>23)
+  96   3                          hour%=10;
+  97   3                 }
+  98   2                else if(state==2)
+  99   2                {
+ 100   3                   minute+=10;
+ 101   3                   if(minute>59)
+ 102   3                          minute%=10;
+ 103   3                }    
+ 104   2                else if(state==3)
+ 105   2                {
+ 106   3                   second+=10;
+ 107   3                   if(second>59)
+ 108   3                         second%=10;
+ 109   3                }
+ 110   2                
+ 111   2                 
+ 112   2         }
+ 113   1         else if(!SUB)
+ 114   1         {
+ 115   2                if(state==1)
+ 116   2                 {  
+ 117   3                        ++hour;
+C51 COMPILER V9.01   CLOCK1                                                                12/01/2015 09:04:37 PAGE 3   
+
+ 118   3      
+ 119   3                        if((hour%10)==0)               
+ 120   3                               hour-=10;      
+ 121   3      
+ 122   3                    if((hour/10)==2)
+ 123   3                        {
+ 124   4                           if((hour%10)>3)
+ 125   4                                  hour=hour/10*10;
+ 126   4                        } 
+ 127   3                      
+ 128   3                 }
+ 129   2                else if(state==2)
+ 130   2                {
+ 131   3                    ++minute;
+ 132   3      
+ 133   3                        if((minute%10)==0)             
+ 134   3                               minute-=10;  
+ 135   3                }    
+ 136   2                else if(state==3)
+ 137   2                {
+ 138   3                     ++second;
+ 139   3      
+ 140   3                        if((second%10)==0)             
+ 141   3                               second-=10;  
+ 142   3                }
+ 143   2         }
+ 144   1      
+ 145   1        
+ 146   1      }
+ 147          
+ 148          void main()
+ 149          {
+ 150   1         init_timer0();
+ 151   1      
+ 152   1         hour=12;
+ 153   1         minute=0;
+ 154   1         second=0;
+ 155   1         state=0;
+ 156   1         display(); 
+ 157   1      
+ 158   1         while(1)
+ 159   1         {
+ 160   2      
+ 161   2                if((!SET || !ADD || !SUB) && !key_mark)
+ 162   2                {
+ 163   3                  delay();
+ 164   3                      if(!SET || !ADD || !SUB) 
+ 165   3                      {
+ 166   4                         key_mark=1;
+ 167   4                         key();
+ 168   4                        
+ 169   4                      }
+ 170   3                }
+ 171   2                else if(SET && ADD && SUB)
+ 172   2                {
+ 173   3                   key_mark=0;
+ 174   3                       
+ 175   3                }
+ 176   2      
+ 177   2            if(sec)
+ 178   2                {
+ 179   3                   sec=0;
+C51 COMPILER V9.01   CLOCK1                                                                12/01/2015 09:04:37 PAGE 4   
+
+ 180   3      
+ 181   3                       if(state==0)
+ 182   3                       {
+ 183   4                          if(++second>59)
+ 184   4                          {
+ 185   5                             second=0;
+ 186   5                                 if(++minute>59)
+ 187   5                              {
+ 188   6                                     minute=0;
+ 189   6                                     if(++hour>23)
+ 190   6                                       hour=0;
+ 191   6                                  }
+ 192   5                          }
+ 193   4                       }
+ 194   3      
+ 195   3                        t[0]=zxm[second%10];
+ 196   3                t[1]=zxm[second/10];
+ 197   3                t[2]=zxm[minute%10];
+ 198   3                t[3]=zxm[minute/10];
+ 199   3                t[4]=zxm[hour%10];
+ 200   3                t[5]=zxm[hour/10];
+ 201   3                        
+ 202   3                        display();
+ 203   3                }
+ 204   2                else if(half_sec)
+ 205   2                {
+ 206   3                   half_sec=0;
+ 207   3                       
+ 208   3                       
+ 209   3                        t[0]=zxm[second%10];
+ 210   3                t[1]=zxm[second/10];
+ 211   3                t[2]=zxm[minute%10];
+ 212   3                t[3]=zxm[minute/10];
+ 213   3                t[4]=zxm[hour%10];
+ 214   3                t[5]=zxm[hour/10];
+ 215   3      
+ 216   3                       if(state==1)
+ 217   3                 t[4]=t[5]=0xff;
+ 218   3               else if(state==2)
+ 219   3                 t[2]=t[3]=0xff;
+ 220   3               else if(state==3)
+ 221   3                 t[0]=t[1]=0xff;
+ 222   3      
+ 223   3                       display();
+ 224   3      
+ 225   3                }
+ 226   2         } 
+ 227   1      
+ 228   1      }
+ 229          
+ 230          
+ 231          
+ 232          
+ 233          
+ 234          
+ 235          
+ 236          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    717    ----
+   CONSTANT SIZE    =   ----    ----
+C51 COMPILER V9.01   CLOCK1                                                                12/01/2015 09:04:37 PAGE 5   
+
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     26    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      3    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

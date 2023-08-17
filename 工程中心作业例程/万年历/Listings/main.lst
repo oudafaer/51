@@ -1,0 +1,764 @@
+C51 COMPILER V9.54   MAIN                                                                  10/28/2022 23:10:39 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: E:\MDK5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main.ls
+                    -t) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          /**************************************************************************************
+   2          *项目：51单片机时钟万年历设计
+   3          *作者：化作尘
+   4          *版本：V1.1
+   5          *邮箱：2809786963@qq.com
+   6          *时间：2020年12月1日16:43:51    
+   7          *哔哩哔哩视频地址:https://www.bilibili.com/video/BV1VQ4y1M79K
+   8          *注意事项：闹钟根据实物设计，不能仿真，使用的是内部eeprom
+   9          ***************************************************************************************/
+  10          
+  11          #include "reg52.h"                       //此文件中定义了单片机的一些特殊功能寄存器
+  12          #include "ds1302.h"
+*** WARNING C318 IN LINE 12 OF main.c: can't open file 'ds1302.h'
+  13          #include "temp.h"
+*** WARNING C318 IN LINE 13 OF main.c: can't open file 'temp.h'
+  14          #include "lcd.h"
+*** WARNING C318 IN LINE 14 OF main.c: can't open file 'lcd.h'
+  15          #include "eeprom.h"
+*** WARNING C318 IN LINE 15 OF main.c: can't open file 'eeprom.h'
+  16          
+  17          sbit k1 = P1^0;                 //按键
+  18          sbit k2 = P1^1;                  
+  19          sbit k3 = P1^2;
+  20          sbit k4 = P1^3;
+  21          
+  22          sbit lcdled = P2^4;                      //lcd背光
+  23          sbit beep = P1^4;                       //蜂鸣器
+  24          
+  25          unsigned int ti=0,alarm=0;       //修改第几个时间参数 、修改第几个闹钟参数
+  26          unsigned char alarm_hour=0x12,alarm_min=0x00;    //闹钟时、分参数
+  27          
+  28          enum Mode                               //定义枚举、三种模式
+  29          {
+  30                  DISPLAYDATA,MODIFYDATA,SETALARMCLOCK,NONE,ALARMCLOCK
+  31          }mode;
+  32          
+  33          enum Alarmswitch         //定义闹钟开关
+  34          {
+  35                  OFF,ON
+  36          }alarmswitch;
+  37          
+  38          /*********延时函数***********/            
+  39          void delay(unsigned int t)       //短延时
+  40          {
+  41   1              while(t--);
+  42   1      }
+  43          void delay_ms(unsigned int t)   //毫秒延时
+  44          {
+  45   1              unsigned int a,b;
+  46   1              for(a=0;a<t;a++)
+  47   1              for(b=0;b<120;b++);
+  48   1      }
+  49          
+  50          /********显示日期、时间、星期***********/
+C51 COMPILER V9.54   MAIN                                                                  10/28/2022 23:10:39 PAGE 2   
+
+  51          void display_data(void)
+  52          {
+  53   1              LcdWriteCom(0x80);
+*** WARNING C206 IN LINE 53 OF main.c: 'LcdWriteCom': missing function-prototype
+*** ERROR C267 IN LINE 53 OF main.c: 'LcdWriteCom': requires ANSI-style prototype
+  54   1              LcdWritestr("20");      
+  55   1              LcdWriteData(TIME[6]/16+0x30);    //年
+  56   1              LcdWriteData(TIME[6]%16+0x30);
+  57   1              LcdWriteData('-');
+  58   1              LcdWriteData(TIME[4]/16+0x30);    //月
+  59   1              LcdWriteData(TIME[4]%16+0x30);
+  60   1              LcdWriteData('-');
+  61   1              LcdWriteData(TIME[3]/16+0x30);    //日
+  62   1              LcdWriteData(TIME[3]%16+0x30);
+  63   1      
+  64   1              LcdWritestr("  ");
+  65   1              switch(TIME[5])                                    //显示星期
+  66   1              {               
+  67   2                      case 0:LcdWritestr("Mon"); break;
+  68   2                      case 1:LcdWritestr("Tue"); break;
+  69   2                      case 2:LcdWritestr("Wed"); break;
+  70   2                      case 3:LcdWritestr("Thu"); break;
+  71   2                      case 4:LcdWritestr("Fri"); break;
+  72   2                      case 5:LcdWritestr("Sat"); break;
+  73   2                      case 6:LcdWritestr("Sun"); break;
+  74   2              }
+  75   1              if(alarmswitch==ON)LcdWriteData('.');
+  76   1              else LcdWriteData(' ');
+  77   1      
+  78   1              LcdWriteCom(0xC0);
+  79   1              LcdWriteData(' ');
+  80   1              LcdWriteData(TIME[2]/16+0x30);    //时
+  81   1              LcdWriteData(TIME[2]%16+0x30);
+  82   1              LcdWriteData(':');
+  83   1              LcdWriteData(TIME[1]/16+0x30);    //分
+  84   1              LcdWriteData(TIME[1]%16+0x30);
+  85   1              LcdWriteData(':');
+  86   1              LcdWriteData(TIME[0]/16+0x30);    //秒
+  87   1              LcdWriteData(TIME[0]%16+0x30);
+  88   1              LcdWritestr(" ");
+  89   1      }
+  90          
+  91          /*********显示温度***********/
+  92          void displaytemp(int temp)       //显示温度
+  93          {
+  94   1              float tp;  
+  95   1              static char flag = 1;
+  96   1              if(temp< 0)                     
+  97   1              {
+  98   2                      LcdWriteCom(0xca);
+  99   2                      LcdWriteData('-'); 
+ 100   2                      temp=temp-1;
+ 101   2                      temp=~temp;
+ 102   2                      tp=temp;
+ 103   2                      temp=tp*0.0625*100+0.5; 
+ 104   2       
+ 105   2              }
+ 106   1              else
+ 107   1              {                       
+ 108   2                      LcdWriteCom(0xca);
+ 109   2                      LcdWriteData('+'); 
+ 110   2                      tp=temp;
+C51 COMPILER V9.54   MAIN                                                                  10/28/2022 23:10:39 PAGE 3   
+
+ 111   2                      temp=tp*0.0625*100+0.5; 
+ 112   2              }
+ 113   1                      if(flag)
+ 114   1                      {
+ 115   2                              flag =0;
+ 116   2                              temp = 2600;
+ 117   2                      }
+ 118   1              if(temp==8500)
+ 119   1                      return ;
+ 120   1              LcdWriteData(temp % 10000 / 1000 + 0x30);
+ 121   1              LcdWriteData(temp % 1000 / 100  + 0x30);
+ 122   1              LcdWriteData('.');
+ 123   1              LcdWriteData(temp % 100 / 10 + 0x30);
+ 124   1              LcdWriteData(temp % 10 + 0x30);
+ 125   1      }
+ 126          
+ 127          
+ 128          /*******************************************************************************
+ 129          * 函 数 名         : keypros
+ 130          * 函数功能                 : 按键处理函数，判断按键K1是否按下
+ 131          *******************************************************************************/
+ 132          void keypros()             //初始页面按键检测
+ 133          {
+ 134   1              if(k1 == 0)                        //切换模式
+ 135   1              {
+ 136   2                      delay(1000);   //消除抖动 一般大约10ms
+ 137   2                      if(k1==0)        //再次判断按键是否按下
+ 138   2                      {
+ 139   3                              mode+= 1;if(mode == 3)mode = DISPLAYDATA;
+ 140   3                      }
+ 141   2                      while(k1 == 0);
+ 142   2              }
+ 143   1              else if(k2 == 0)                          //蜂鸣器测试
+ 144   1              {
+ 145   2                      delay(1000);   //消除抖动 一般大约10ms
+ 146   2                      if(k2==0)        //再次判断按键是否按下
+ 147   2                      {
+ 148   3                              beep = !beep;  
+ 149   3                      }
+ 150   2                      while(k2 == 0);
+ 151   2              }
+ 152   1              else if(k3 == 0)                   //背光灯测试
+ 153   1              {
+ 154   2                      delay(1000);   //消除抖动 一般大约10ms
+ 155   2                      if(k3==0)        //再次判断按键是否按下
+ 156   2                      {
+ 157   3                              lcdled = !lcdled;  
+ 158   3                      }
+ 159   2                      while(k3 == 0);
+ 160   2              }
+ 161   1              else if(k4 == 0)                        //背光灯测试
+ 162   1              {
+ 163   2                      delay(1000);   //消除抖动 一般大约10ms
+ 164   2                      if(k4==0)        //再次判断按键是否按下
+ 165   2                      {
+ 166   3                              alarmswitch=!alarmswitch;  
+ 167   3                      }
+ 168   2                      while(k4 == 0);
+ 169   2              }               
+ 170   1      }
+ 171          
+ 172          /*************修改时间************/
+C51 COMPILER V9.54   MAIN                                                                  10/28/2022 23:10:39 PAGE 4   
+
+ 173          void modify(void)
+ 174          {
+ 175   1              static int time=0;
+ 176   1              time++;
+ 177   1              if(k1 == 0)                     //切换模式
+ 178   1              {
+ 179   2                      delay(1000);   //消除抖动 一般大约10ms
+ 180   2                      if(k1==0)        //再次判断按键是否按下
+ 181   2                      {
+ 182   3                              mode+= 1;if(mode == 3)mode = DISPLAYDATA;
+ 183   3                      }
+ 184   2      
+ 185   2                      while(k1 == 0);
+ 186   2              }
+ 187   1              else if(k2 == 0)                   //选择修改参数
+ 188   1              {
+ 189   2                      delay(1000);   //消除抖动 一般大约10ms
+ 190   2                      if(k2==0)        //再次判断按键是否按下
+ 191   2                      {
+ 192   3                              ti++; 
+ 193   3                              if(ti == 8)ti=0; 
+ 194   3                      }
+ 195   2                      while(k2 == 0);
+ 196   2              }
+ 197   1              else if(k3 == 0 ||k4 == 0)
+ 198   1              switch(ti)                                 //选择进入修改参数
+ 199   1              {
+ 200   2                      case 0:
+ 201   2                                                      if(k4==0 | k3==0)
+ 202   2                                                      {
+ 203   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 204   3                                                              if(k4==0 | k3 ==0)       //再次判断按键是否按下
+ 205   3                                                              {
+ 206   4                                                                 TIME[0]=0;
+ 207   4                                                              }
+ 208   3                                                              while(k4 == 0 | k3==0);
+ 209   3                                                      }
+ 210   2                                                      
+ 211   2                                                      break;    //?
+ 212   2                      case 1:
+ 213   2                                                      if(k3==0)
+ 214   2                                                      {
+ 215   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 216   3                                                              if(k3 ==0)       //再次判断按键是否按下
+ 217   3                                                              {
+ 218   4                                                                 TIME[1]++;
+ 219   4                                                                 if(TIME[1]%16 == 0x0a)
+ 220   4                                                                 {
+ 221   5                                                                              TIME[1] += 16;
+ 222   5                                                                              TIME[1] &= 0xf0;
+ 223   5                                                                 }if(TIME[1]==0x60)TIME[1]=0;
+ 224   4                                                              }
+ 225   3                                                              while(k3==0);
+ 226   3                                                      }
+ 227   2                                                      if(k4==0)
+ 228   2                                                      {
+ 229   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 230   3                                                              if(k4 ==0)       //再次判断按键是否按下
+ 231   3                                                              {
+ 232   4                                                                 TIME[1]--;
+ 233   4                                                                 if(TIME[1]%16==0x0f && TIME[1]!=0xff)
+ 234   4                                                                 {
+C51 COMPILER V9.54   MAIN                                                                  10/28/2022 23:10:39 PAGE 5   
+
+ 235   5                                                                              TIME[1] &= 0xf9;
+ 236   5                                                                 }
+ 237   4                                                                 if(TIME[1]==0xff)TIME[1]=0x59;
+ 238   4                                                              }
+ 239   3                                                              while(k4==0);
+ 240   3                                                      }
+ 241   2                                                      break;    //?
+ 242   2                      case 2:
+ 243   2                                                      if(k3==0)
+ 244   2                                                      {
+ 245   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 246   3                                                              if(k3 ==0)       //再次判断按键是否按下
+ 247   3                                                              {
+ 248   4                                                                 TIME[2]++;
+ 249   4                                                                 if(TIME[2]%16 == 0x0a)
+ 250   4                                                                 {
+ 251   5                                                                              TIME[2] += 16;
+ 252   5                                                                              TIME[2] &= 0xf0;
+ 253   5                                                                 }if(TIME[2]==0x24)TIME[2]=0;
+ 254   4                                                              }
+ 255   3                                                              while(k3==0);
+ 256   3                                                      }
+ 257   2                                                      if(k4==0)
+ 258   2                                                      {
+ 259   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 260   3                                                              if(k4 ==0)       //再次判断按键是否按下
+ 261   3                                                              {
+ 262   4                                                                 TIME[2]--;
+ 263   4                                                                 if(TIME[2]%16==0x0f && TIME[2]!=0xff)
+ 264   4                                                                 {
+ 265   5                                                                              TIME[2] &= 0xf9;
+ 266   5                                                                 }
+ 267   4                                                                 if(TIME[2]==0xff)TIME[2]=0x23;
+ 268   4                                                              }
+ 269   3                                                              while(k4==0);
+ 270   3                                                      }
+ 271   2                                                      break;    //?
+ 272   2                      case 3:
+ 273   2                                                      if(k3==0)
+ 274   2                                                      {
+ 275   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 276   3                                                              if(k3 ==0)       //再次判断按键是否按下
+ 277   3                                                              {
+ 278   4                                                                 TIME[3]++;
+ 279   4                                                                 if(TIME[3]%16 == 0x0a)
+ 280   4                                                                 {
+ 281   5                                                                              TIME[3] += 16;
+ 282   5                                                                              TIME[3] &= 0xf0;
+ 283   5                                                                 }if(TIME[3]==0x32)TIME[3]=0;
+ 284   4                                                              }
+ 285   3                                                              while(k3==0);
+ 286   3                                                      }
+ 287   2                                                      if(k4==0)
+ 288   2                                                      {
+ 289   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 290   3                                                              if(k4 ==0)       //再次判断按键是否按下
+ 291   3                                                              {
+ 292   4                                                                 TIME[3]--;
+ 293   4                                                                 if(TIME[3]%16==0x0f && TIME[3]!=0xff)
+ 294   4                                                                 {
+ 295   5                                                                              TIME[3] &= 0xf9;
+ 296   5                                                                 }
+C51 COMPILER V9.54   MAIN                                                                  10/28/2022 23:10:39 PAGE 6   
+
+ 297   4                                                                 if(TIME[3]==0xff)TIME[3]=0x31;
+ 298   4                                                              }
+ 299   3                                                              while(k4==0);
+ 300   3                                                      }
+ 301   2                                                      break;   //日
+ 302   2                      case 4:
+ 303   2                                              
+ 304   2                                                      if(k3==0)
+ 305   2                                                      {
+ 306   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 307   3                                                              if(k3 ==0)       //再次判断按键是否按下
+ 308   3                                                              {
+ 309   4                                                                 TIME[4]++;
+ 310   4                                                                 if(TIME[4]%16 == 0x0a)
+ 311   4                                                                 {
+ 312   5                                                                              TIME[4] += 16;
+ 313   5                                                                              TIME[4] &= 0xf0;
+ 314   5                                                                 }if(TIME[4]==0x13)TIME[4]=0;
+ 315   4                                                              }
+ 316   3                                                              while(k3==0);
+ 317   3                                                      }
+ 318   2                                                      if(k4==0)
+ 319   2                                                      {
+ 320   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 321   3                                                              if(k4 ==0)       //再次判断按键是否按下
+ 322   3                                                              {
+ 323   4                                                                 TIME[4]--;
+ 324   4                                                                 if(TIME[4]%16==0x0f && TIME[4]!=0xff)
+ 325   4                                                                 {
+ 326   5                                                                              TIME[4] &= 0xf9;
+ 327   5                                                                 }
+ 328   4                                                                 if(TIME[4]==0xff)TIME[4]=0x12;
+ 329   4                                                              }
+ 330   3                                                              while(k4==0);
+ 331   3                                                      }
+ 332   2                                                      break;   //月
+ 333   2                      case 5:
+ 334   2                                                      
+ 335   2                                                      if(k3==0)
+ 336   2                                                      {
+ 337   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 338   3                                                              if(k3 ==0)       //再次判断按键是否按下
+ 339   3                                                              {
+ 340   4                                                                 TIME[5]++;if(TIME[5]==7)TIME[5]=0;
+ 341   4                                                              }
+ 342   3                                                              while(k3==0);
+ 343   3                                                      }
+ 344   2                                                      if(k4==0)
+ 345   2                                                      {
+ 346   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 347   3                                                              if(k4 ==0)       //再次判断按键是否按下
+ 348   3                                                              {
+ 349   4                                                                 TIME[5]--;if(TIME[5]==0xff)TIME[5]=6;
+ 350   4                                                              }
+ 351   3                                                              while(k4==0);
+ 352   3                                                      }
+ 353   2                                                      break;   //周
+ 354   2                      case 6:
+ 355   2                                                      
+ 356   2                                                      if(k3==0)
+ 357   2                                                      {
+ 358   3                                                              delay(1000);   //消除抖动 一般大约10ms
+C51 COMPILER V9.54   MAIN                                                                  10/28/2022 23:10:39 PAGE 7   
+
+ 359   3                                                              if(k3 ==0)       //再次判断按键是否按下
+ 360   3                                                              {
+ 361   4                                                                 TIME[6]++;
+ 362   4                                                                 if(TIME[6]%16 == 0x0a)
+ 363   4                                                                 {
+ 364   5                                                                              TIME[6] += 16;
+ 365   5                                                                              TIME[6] &= 0xf0;
+ 366   5                                                                 }if(TIME[6]==0xa0)TIME[6]=0;
+ 367   4                                                              }
+ 368   3                                                              while(k3==0);
+ 369   3                                                      }
+ 370   2                                                      if(k4==0)
+ 371   2                                                      {
+ 372   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 373   3                                                              if(k4 ==0)       //再次判断按键是否按下
+ 374   3                                                              {
+ 375   4                                                                 TIME[6]--;
+ 376   4                                                                 if(TIME[6]%16==0x0f && TIME[6]!=0xff)
+ 377   4                                                                 {
+ 378   5                                                                              TIME[6] &= 0xf9;
+ 379   5                                                                 }
+ 380   4                                                                 if(TIME[6]==0xff)TIME[6]=0x99;
+ 381   4                                                              }
+ 382   3                                                              while(k4==0);
+ 383   3                                                      }
+ 384   2                                                      break;   //年
+ 385   2                      case 7: 
+ 386   2                                                      if(k3==0)
+ 387   2                                                      {
+ 388   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 389   3                                                              if(k3 ==0)       //再次判断按键是否按下
+ 390   3                                                              {
+ 391   4                                                                 mode=DISPLAYDATA;
+ 392   4                                                                 ti=0;
+ 393   4                                                              }
+ 394   3                                                              while(k3==0);
+ 395   3                                                      }
+ 396   2                                                      if(k4==0)
+ 397   2                                                      {
+ 398   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 399   3                                                              if(k4 ==0)       //再次判断按键是否按下
+ 400   3                                                              {
+ 401   4                                                                      Ds1302Init();             //时钟初始化
+ 402   4                                                                      mode = DISPLAYDATA;    //返回日期
+ 403   4                                                                      ti = 0;                         //还原初始修改
+ 404   4                                                              }
+ 405   3                                                              while(k4==0);
+ 406   3                                                      }
+ 407   2                                                      break;   //年
+ 408   2              }
+ 409   1      
+ 410   1      
+ 411   1              if(time == 200)
+ 412   1              {
+ 413   2                      display_data();
+ 414   2                      if(ti == 7){
+ 415   3                                                      LcdWriteCom(0xca);
+ 416   3                                                      LcdWritestr(" <- OK");
+ 417   3                      }
+ 418   2                              
+ 419   2              }
+ 420   1              else if(time == 400)
+C51 COMPILER V9.54   MAIN                                                                  10/28/2022 23:10:39 PAGE 8   
+
+ 421   1              switch(ti)                                 //选择进入修改参数
+ 422   1              {
+ 423   2                      case 0: 
+ 424   2                                                      LcdWriteCom(0xc7);
+ 425   2                                                      LcdWritestr("  ");      
+ 426   2                      break;
+ 427   2                      case 1: 
+ 428   2                                                      
+ 429   2                                                      LcdWriteCom(0xc4);
+ 430   2                                                      LcdWritestr("  ");
+ 431   2                      break;
+ 432   2                      case 2: 
+ 433   2                                                      LcdWriteCom(0xc1);
+ 434   2                                                      LcdWritestr("  ");
+ 435   2                                                      
+ 436   2                              break;
+ 437   2                      case 3: 
+ 438   2                                                      LcdWriteCom(0x88);
+ 439   2                                                      LcdWritestr("  ");
+ 440   2                              break;
+ 441   2                      case 4: 
+ 442   2                                                      LcdWriteCom(0x85);
+ 443   2                                                      LcdWritestr("  ");
+ 444   2                              break;
+ 445   2                      case 5: 
+ 446   2                                                      LcdWriteCom(0x8c);
+ 447   2                                                      LcdWritestr("   ");
+ 448   2                              break;
+ 449   2                      case 6: 
+ 450   2                                                      LcdWriteCom(0x80);
+ 451   2                                                      LcdWritestr("    ");
+ 452   2                      break;
+ 453   2                      case 7: 
+ 454   2                                                      LcdWriteCom(0xca);
+ 455   2                                                      LcdWritestr("      ");
+ 456   2                              break;
+ 457   2              }else if(time>400) time=0;
+ 458   1              
+ 459   1              delay_ms(1);
+ 460   1              
+ 461   1      }
+ 462          void setalarmclock(void)        //设置闹钟模式
+ 463          {
+ 464   1              static int time=0;
+ 465   1              time++;
+ 466   1              
+ 467   1              if(k1 == 0)                      //切换模式
+ 468   1              {
+ 469   2                      delay(1000);   //消除抖动 一般大约10ms
+ 470   2                      if(k1==0)        //再次判断按键是否按下
+ 471   2                      {
+ 472   3                              mode+= 1;if(mode == 3)mode = DISPLAYDATA;
+ 473   3                      }
+ 474   2      
+ 475   2                      while(k1 == 0);
+ 476   2              }
+ 477   1              if(k2 == 0)                      //选择闹钟修改参数
+ 478   1              {
+ 479   2                      delay(1000);   //消除抖动 一般大约10ms
+ 480   2                      if(k2==0)        //再次判断按键是否按下
+ 481   2                      {
+ 482   3                              alarm++; 
+C51 COMPILER V9.54   MAIN                                                                  10/28/2022 23:10:39 PAGE 9   
+
+ 483   3                              if(alarm == 3)alarm=0; 
+ 484   3                      }
+ 485   2                      while(k2 == 0);
+ 486   2              }
+ 487   1              
+ 488   1              switch(alarm)                   //选择进入修改参数
+ 489   1              {
+ 490   2                      case 0:
+ 491   2                                      if(k3 == 0)                       //控制闹钟开
+ 492   2                                      {
+ 493   3                                              delay(1000);   //消除抖动 一般大约10ms
+ 494   3                                              if(k3==0)        //再次判断按键是否按下
+ 495   3                                              {
+ 496   4                                                      alarmswitch = ON;
+ 497   4                                                      SectorErase(0x2401);
+ 498   4                                                      byte_write(0x2401,alarmswitch);
+ 499   4                                              }
+ 500   3                                              while(k3 == 0);
+ 501   3                                      }
+ 502   2                                      if(k4 == 0)                      //控制闹钟关闭
+ 503   2                                      {
+ 504   3                                              delay(1000);   //消除抖动 一般大约10ms
+ 505   3                                              if(k4==0)        //再次判断按键是否按下
+ 506   3                                              {
+ 507   4                                                      alarmswitch = OFF;
+ 508   4                                                      SectorErase(0x2401);
+ 509   4                                                      byte_write(0x2401,alarmswitch);
+ 510   4                                              }
+ 511   3                                              while(k4 == 0);
+ 512   3                                      }
+ 513   2                                      break;
+ 514   2                      case 1: 
+ 515   2                                                                                                      
+ 516   2                                                      if(k3==0)                 //控制闹钟时针加
+ 517   2                                                      {
+ 518   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 519   3                                                              if(k3 ==0)       //再次判断按键是否按下
+ 520   3                                                              {
+ 521   4                                                                 alarm_hour++;
+ 522   4                                                                 if(alarm_hour%16 == 0x0a)
+ 523   4                                                                 {
+ 524   5                                                                              alarm_hour += 16;
+ 525   5                                                                              alarm_hour &= 0xf0;
+ 526   5                                                                 }if(alarm_hour==0x24)alarm_hour=0;
+ 527   4                                                                  SectorErase(0x2601);
+ 528   4                                                                      byte_write(0x2601,alarm_hour);
+ 529   4                                                              }
+ 530   3                                                              while(k3==0);
+ 531   3                                                      }
+ 532   2                                                      if(k4==0)                         //控制闹钟时针减
+ 533   2                                                      {
+ 534   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 535   3                                                              if(k4 ==0)       //再次判断按键是否按下
+ 536   3                                                              {
+ 537   4                                                                 alarm_hour--;
+ 538   4                                                                 if(alarm_hour%16==0x0f && alarm_hour!=0xff)
+ 539   4                                                                 {
+ 540   5                                                                              alarm_hour &= 0xf9;
+ 541   5                                                                 }
+ 542   4                                                                 if(alarm_hour==0xff)alarm_hour=0x23;
+ 543   4                                                                 SectorErase(0x2601);
+ 544   4                                                                 byte_write(0x2601,alarm_hour);
+C51 COMPILER V9.54   MAIN                                                                  10/28/2022 23:10:39 PAGE 10  
+
+ 545   4                                                              }
+ 546   3                                                              while(k4==0);
+ 547   3                                                      }
+ 548   2                                      break;
+ 549   2                      case 2:
+ 550   2                                      
+ 551   2                                                      if(k3==0)
+ 552   2                                                      {
+ 553   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 554   3                                                              if(k3 ==0)       //再次判断按键是否按下
+ 555   3                                                              {
+ 556   4                                                                 alarm_min++;
+ 557   4                                                                 if(alarm_min%16 == 0x0a)
+ 558   4                                                                 {
+ 559   5                                                                              alarm_min += 16;
+ 560   5                                                                              alarm_min &= 0xf0;
+ 561   5                                                                 }if(alarm_min==0x60)alarm_min=0;
+ 562   4                                                                 SectorErase(0x2201);
+ 563   4                                                                 byte_write(0x2201,alarm_min);
+ 564   4                                                              }
+ 565   3                                                              while(k3==0);
+ 566   3                                                      }
+ 567   2                                                      if(k4==0)
+ 568   2                                                      {
+ 569   3                                                              delay(1000);   //消除抖动 一般大约10ms
+ 570   3                                                              if(k4 ==0)       //再次判断按键是否按下
+ 571   3                                                              {
+ 572   4                                                                 alarm_min--;
+ 573   4                                                                 if(alarm_min%16==0x0f && alarm_min!=0xff)
+ 574   4                                                                 {
+ 575   5                                                                              alarm_min &= 0xf9;
+ 576   5                                                                 }
+ 577   4                                                                 if(alarm_min==0xff)alarm_min=0x59;
+ 578   4                                                                 SectorErase(0x2201);
+ 579   4                                                                 byte_write(0x2201,alarm_min);
+ 580   4                                                              }
+ 581   3                                                              while(k4==0);
+ 582   3                                                      }
+ 583   2                                      break;
+ 584   2              }
+ 585   1      
+ 586   1      
+ 587   1              
+ 588   1              if(time == 200)
+ 589   1              {
+ 590   2                      alarm_hour=byte_read(0x2601);
+ 591   2                      alarm_min=byte_read(0x2201);
+ 592   2                      alarmswitch=byte_read(0x2401);
+ 593   2                      LcdWriteCom(0x80);                       //显示
+ 594   2                      LcdWritestr("alarm clock:    ");
+ 595   2                      LcdWriteCom(0xc0); 
+ 596   2                      if(alarmswitch == OFF)LcdWritestr("  OFF    ");
+ 597   2                      else LcdWritestr("  ON     ");
+ 598   2                      LcdWriteCom(0xc9); 
+ 599   2                      LcdWriteData(alarm_hour/16+0x30);
+ 600   2                      LcdWriteData(alarm_hour%16+0x30);
+ 601   2                      LcdWriteData(':'); 
+ 602   2                      LcdWriteData(alarm_min/16+0x30);
+ 603   2                      LcdWriteData(alarm_min%16+0x30);
+ 604   2                      LcdWritestr("    ");
+ 605   2              }       else if(time == 400)
+ 606   1              switch(alarm)                              //选择进入修改参数
+C51 COMPILER V9.54   MAIN                                                                  10/28/2022 23:10:39 PAGE 11  
+
+ 607   1              {
+ 608   2                      case 0: 
+ 609   2                                      LcdWriteCom(0xc0);
+ 610   2                                      LcdWritestr("      ");  
+ 611   2                      break;
+ 612   2                      case 1: 
+ 613   2                                      LcdWriteCom(0xc9);
+ 614   2                                      LcdWritestr("  ");
+ 615   2                      break;
+ 616   2                      case 2: 
+ 617   2                                      LcdWriteCom(0xcc);
+ 618   2                                      LcdWritestr("  ");
+ 619   2                                                      
+ 620   2                              break;
+ 621   2                      
+ 622   2              }else if(time>400) time=0;
+ 623   1              
+ 624   1              
+ 625   1              
+ 626   1              
+ 627   1              delay_ms(1);
+ 628   1      }
+ 629          
+ 630          /************闹钟模式*****************/
+ 631          void alarmclock(void)
+ 632          {
+ 633   1          if(alarmswitch==ON && alarm_hour==TIME[2] && alarm_min==TIME[1])  //闹钟
+ 634   1              {                       
+ 635   2                      beep=1;
+ 636   2                      delay_ms(100);
+ 637   2                      beep=0;
+ 638   2                      delay_ms(100);  
+ 639   2                      beep=1;
+ 640   2                      delay_ms(100);
+ 641   2                      beep=0;
+ 642   2                      LcdWriteCom(0x80);
+ 643   2                      LcdWritestr("   time out!    ");
+ 644   2                      LcdWriteCom(0xc0);
+ 645   2                      LcdWritestr("now time: ");
+ 646   2                      LcdWriteData(alarm_hour/16+0x30);
+ 647   2                      LcdWriteData(alarm_hour%16+0x30);
+ 648   2                      LcdWriteData(':'); 
+ 649   2                      LcdWriteData(alarm_min/16+0x30);
+ 650   2                      LcdWriteData(alarm_min%16+0x30);
+ 651   2                      LcdWritestr("    ");
+ 652   2                      delay_ms(500);
+ 653   2                      LcdClean();     
+ 654   2              }
+ 655   1              else mode=DISPLAYDATA;
+ 656   1              if(k4==0)
+ 657   1              {
+ 658   2                      delay(1000);   //消除抖动 一般大约10ms
+ 659   2                      if(k4 ==0)       //再次判断按键是否按下
+ 660   2                      {
+ 661   3                              alarmswitch=OFF;
+ 662   3                      }
+ 663   2                      while(k4==0);
+ 664   2              }       
+ 665   1      }
+ 666          /*******************************************************************************
+ 667          * 函 数 名         : main
+ 668          * 函数功能                 : 主函数
+C51 COMPILER V9.54   MAIN                                                                  10/28/2022 23:10:39 PAGE 12  
+
+ 669          * 输    入         : 无
+ 670          * 输    出         : 无
+ 671          *******************************************************************************/
+ 672          void main(void)
+ 673          {
+ 674   1              int ucount=0;
+ 675   1              unsigned char lastSec;
+ 676   1              beep= 0;
+ 677   1              LcdInit();                      //lcd初始化
+ 678   1              //Ds1302Init();           //时钟初始化
+ 679   1              Ds18b20Init();            //温度传感器初始化
+ 680   1              SectorErase(0x2001);
+ 681   1      //      byte_write(0x2001,0x08);           //执行一遍初始化
+ 682   1      //      byte_write(0x2201,0x00);
+ 683   1      //      byte_write(0x2401,0x00);
+ 684   1              alarm_hour=byte_read(0x2601);
+ 685   1              alarm_min=byte_read(0x2201);
+ 686   1              alarmswitch=byte_read(0x2401);
+ 687   1      
+ 688   1              while(1)                
+ 689   1              {
+ 690   2                      switch(mode)    //模式选择
+ 691   2                      {
+ 692   3                              case DISPLAYDATA:               //时间显示模式
+ 693   3                                      Ds1302ReadTime(); //更新时间
+ 694   3                                      if(TIME[0] !=  lastSec)
+ 695   3                                      {
+ 696   4                                              lastSec = TIME[0];
+ 697   4                                              display_data();           //显示时间     秒分时日月周年
+ 698   4                                              displaytemp(Ds18b20ReadTemp());//显示温度
+ 699   4                                              if(alarmswitch==ON && alarm_hour==TIME[2] && alarm_min==TIME[1])  //闹钟
+ 700   4                                              {
+ 701   5                                                      mode = ALARMCLOCK; 
+ 702   5                                              }
+ 703   4                                      }
+ 704   3                              keypros();                              //按键检测
+ 705   3                                      
+ 706   3                                      break;
+ 707   3                              case MODIFYDATA:                          //时间修改模式
+ 708   3                                      modify();
+ 709   3                                      break;
+ 710   3                              case SETALARMCLOCK:                        //设置闹钟模式
+ 711   3                                      setalarmclock();
+ 712   3                                      break;
+ 713   3                              case ALARMCLOCK:                           //闹钟模式
+ 714   3                                      alarmclock();
+ 715   3                                      break;
+ 716   3                      }
+ 717   2                      
+ 718   2              }                               
+ 719   1      }
+ 720          
+ 721          
+ 722          
+ 723          
+ 724          
+
+C51 COMPILATION COMPLETE.  5 WARNING(S),  1 ERROR(S)

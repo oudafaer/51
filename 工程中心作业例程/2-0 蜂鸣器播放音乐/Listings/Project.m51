@@ -1,0 +1,177 @@
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                    03/30/2022  23:30:20  PAGE 1
+
+
+BL51 BANKED LINKER/LOCATER V6.22.2.0, INVOKED BY:
+E:\MDK5\C51\BIN\BL51.EXE .\Objects\main.obj, .\Objects\Delay.obj, .\Objects\Timer0.obj TO .\Objects\Project PRINT (.\Lis
+>> tings\Project.m51) RAMSIZE (256)
+
+
+MEMORY MODEL: SMALL
+
+
+INPUT MODULES INCLUDED:
+  .\Objects\main.obj (MAIN)
+  .\Objects\Delay.obj (DELAY)
+  .\Objects\Timer0.obj (TIMER0)
+  E:\MDK5\C51\LIB\C51S.LIB (?C_STARTUP)
+  E:\MDK5\C51\LIB\C51S.LIB (?C?IMUL)
+
+
+LINK MAP OF MODULE:  .\Objects\Project (MAIN)
+
+
+            TYPE    BASE      LENGTH    RELOCATION   SEGMENT NAME
+            -----------------------------------------------------
+
+            * * * * * * *   D A T A   M E M O R Y   * * * * * * *
+            REG     0000H     0008H     ABSOLUTE     "REG BANK 0"
+            DATA    0008H     0004H     UNIT         ?DT?MAIN
+            IDATA   000CH     0001H     UNIT         ?STACK
+
+            * * * * * * *   C O D E   M E M O R Y   * * * * * * *
+            CODE    0000H     0003H     ABSOLUTE     
+                    0003H     0008H                  *** GAP ***
+            CODE    000BH     0003H     ABSOLUTE     
+            CODE    000EH     0424H     UNIT         ?CO?MAIN
+            CODE    0432H     0068H     UNIT         ?PR?MAIN?MAIN
+            CODE    049AH     004FH     UNIT         ?PR?TIMER0_ROUTINE?MAIN
+            CODE    04E9H     0017H     UNIT         ?PR?TIMER0INIT?TIMER0
+            CODE    0500H     0015H     UNIT         ?PR?_DELAY?DELAY
+            CODE    0515H     0012H     UNIT         ?C?LIB_CODE
+            CODE    0527H     000CH     UNIT         ?C_C51STARTUP
+
+
+
+OVERLAY MAP OF MODULE:   .\Objects\Project (MAIN)
+
+
+SEGMENT
+  +--> CALLED SEGMENT
+---------------------
+?PR?TIMER0_ROUTINE?MAIN
+  +--> ?CO?MAIN
+
+*** NEW ROOT ***************************************************
+
+?C_C51STARTUP
+  +--> ?PR?MAIN?MAIN
+
+?PR?MAIN?MAIN
+  +--> ?PR?TIMER0INIT?TIMER0
+  +--> ?CO?MAIN
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  03/30/2022  23:30:20  PAGE 2
+
+
+  +--> ?PR?_DELAY?DELAY
+
+
+
+SYMBOL TABLE OF MODULE:  .\Objects\Project (MAIN)
+
+  VALUE           TYPE          NAME
+  ----------------------------------
+
+  -------         MODULE        MAIN
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  C:049AH         PUBLIC        Timer0_Routine
+  D:0090H         PUBLIC        P1
+  C:0058H         PUBLIC        Music
+  B:0090H.5       PUBLIC        Buzzer
+  C:0432H         PUBLIC        main
+  D:008CH         PUBLIC        TH0
+  D:008AH         PUBLIC        TL0
+  B:0088H.4       PUBLIC        TR0
+  D:0008H         PUBLIC        MusicSelect
+  D:000AH         PUBLIC        FreqSelect
+  C:000EH         PUBLIC        FreqTable
+  -------         PROC          MAIN
+  C:0432H         LINE#         354
+  C:0432H         LINE#         355
+  C:0432H         LINE#         356
+  C:0435H         LINE#         357
+  C:0435H         LINE#         358
+  C:0435H         LINE#         359
+  C:0453H         LINE#         360
+  C:0453H         LINE#         361
+  C:0457H         LINE#         362
+  C:045FH         LINE#         363
+  C:0481H         LINE#         364
+  C:0489H         LINE#         365
+  C:048BH         LINE#         366
+  C:0492H         LINE#         367
+  C:0494H         LINE#         368
+  C:0496H         LINE#         370
+  C:0496H         LINE#         371
+  C:0498H         LINE#         372
+  -------         ENDPROC       MAIN
+  -------         PROC          TIMER0_ROUTINE
+  C:049AH         LINE#         377
+  C:04A9H         LINE#         379
+  C:04C5H         LINE#         380
+  C:04C5H         LINE#         382
+  C:04D7H         LINE#         383
+  C:04DAH         LINE#         384
+  C:04DCH         LINE#         385
+  C:04DCH         LINE#         386
+  -------         ENDPROC       TIMER0_ROUTINE
+  -------         ENDMOD        MAIN
+
+  -------         MODULE        DELAY
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  C:0500H         PUBLIC        _Delay
+BL51 BANKED LINKER/LOCATER V6.22.2.0                                                  03/30/2022  23:30:20  PAGE 3
+
+
+  -------         PROC          _DELAY
+  D:0006H         SYMBOL        xms
+  -------         DO            
+  D:0005H         SYMBOL        i
+  D:0004H         SYMBOL        j
+  -------         ENDDO         
+  C:0500H         LINE#         2
+  C:0500H         LINE#         3
+  C:0500H         LINE#         5
+  C:050AH         LINE#         6
+  C:050AH         LINE#         7
+  C:050CH         LINE#         8
+  C:050EH         LINE#         10
+  C:050EH         LINE#         11
+  C:0510H         LINE#         12
+  C:0512H         LINE#         13
+  C:0514H         LINE#         14
+  -------         ENDPROC       _DELAY
+  -------         ENDMOD        DELAY
+
+  -------         MODULE        TIMER0
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  B:00A8H.7       PUBLIC        EA
+  D:0089H         PUBLIC        TMOD
+  B:00A8H.1       PUBLIC        ET0
+  B:0088H.5       PUBLIC        TF0
+  C:04E9H         PUBLIC        Timer0Init
+  D:008CH         PUBLIC        TH0
+  D:008AH         PUBLIC        TL0
+  B:00B8H.1       PUBLIC        PT0
+  B:0088H.4       PUBLIC        TR0
+  -------         PROC          TIMER0INIT
+  C:04E9H         LINE#         8
+  C:04E9H         LINE#         9
+  C:04E9H         LINE#         10
+  C:04ECH         LINE#         11
+  C:04EFH         LINE#         12
+  C:04F2H         LINE#         13
+  C:04F5H         LINE#         14
+  C:04F7H         LINE#         15
+  C:04F9H         LINE#         16
+  C:04FBH         LINE#         17
+  C:04FDH         LINE#         18
+  C:04FFH         LINE#         19
+  -------         ENDPROC       TIMER0INIT
+  -------         ENDMOD        TIMER0
+
+  -------         MODULE        ?C?IMUL
+  C:0515H         PUBLIC        ?C?IMUL
+  -------         ENDMOD        ?C?IMUL
+
+Program Size: data=13.0 xdata=0 code=1323
+LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)

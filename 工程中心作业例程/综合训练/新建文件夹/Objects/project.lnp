@@ -1,0 +1,13 @@
+".\Objects\AT24C02.obj",
+".\Objects\main.obj",
+".\Objects\INT0.obj",
+".\Objects\IR.obj",
+".\Objects\Timer0.obj",
+".\Objects\DS18B20.obj",
+".\Objects\oneWire.obj",
+".\Objects\Uart.obj",
+".\Objects\I2C.obj",
+".\Objects\oled.obj" 
+TO ".\Objects\project" 
+PRINT(".\Listings\project.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 

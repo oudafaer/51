@@ -1,0 +1,56 @@
+C51 COMPILER V9.60.0.0   MAIN                                                              04/11/2022 01:01:08 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: E:\MDK5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main.ls
+                    -t) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          // 51单片机
+   2          #include <reg52.h>
+   3          #include "UART.h"
+   4          
+   5          typedef unsigned int uint;
+   6          typedef unsigned char uchar; 
+   7          uint Date=0;      //传递数据位
+   8          
+   9          int main()
+  10          {
+  11   1             UART_init();  //波特率9600
+  12   1             while(1)
+  13   1             {
+  14   2                          if(Date == 0x31)  
+  15   2                                              {
+  16   3                                                      P1=0x00;  //本单片机P2^1为小灯
+  17   3                                              }
+  18   2                          else
+  19   2                                              {
+  20   3                               P1 =0xff; 
+  21   3                                              }
+  22   2             }           
+  23   1      }
+  24          
+  25          void UART_INTERRUPT() interrupt 4
+  26          {        
+  27   1                    Date= SBUF;
+  28   1                    RI = 0;   
+  29   1                    SBUF = Date;    //手机和蓝牙模块通讯时，我们可以打开电脑串口调试工具查看我们的发送值）
+  30   1                    while(!TI);
+  31   1                    TI = 0;  
+  32   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     49    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

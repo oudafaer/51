@@ -1,0 +1,48 @@
+C51 COMPILER V9.60.0.0   UART                                                              04/11/2022 01:01:08 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE UART
+OBJECT MODULE PLACED IN .\Objects\UART.obj
+COMPILER INVOKED BY: E:\MDK5\C51\BIN\C51.EXE UART.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\UART.ls
+                    -t) OBJECT(.\Objects\UART.obj)
+
+line level    source
+
+   1          #include "reg52.h"
+   2          
+   3          void UART_init()    //设置串行通信 本晶振为11.0592MHZ，其他的就自己算一下应该设置多少
+   4          {
+   5   1            TMOD = 0x20;
+   6   1            TH1 = 0xfd;
+   7   1            TL1 = 0xfd;  //波特率9600
+   8   1            SM0 = 0;  
+   9   1            SM1 = 1;   // 串口工作方式1 10位异步
+  10   1            REN = 1;  //串口允许接收
+  11   1            TR1 = 1;
+  12   1            EA = 1;
+  13   1            ES =1 ;  //串口中断
+  14   1      }
+  15          /*
+  16          void UART_INTERRUPT() interrupt 4
+  17          {        
+  18                        pass = SBUF;
+  19                        RI = 0;   
+  20                        SBUF = pass;    //手机和蓝牙模块通讯时，我们可以打开电脑串口调试工具查看我们的发送值）
+  21                        while(!TI);
+  22                        TI = 0;  
+  23          }
+  24          */
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     22    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

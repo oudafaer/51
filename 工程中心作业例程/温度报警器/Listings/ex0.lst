@@ -1,0 +1,33 @@
+C51 COMPILER V9.59.0.0   EX0                                                               12/01/2021 13:17:31 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE EX0
+OBJECT MODULE PLACED IN .\Objects\ex0.obj
+COMPILER INVOKED BY: E:\SCM\keil 4\C51\BIN\C51.EXE ex0.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\ex
+                    -0.lst) OBJECT(.\Objects\ex0.obj)
+
+line level    source
+
+   1          #include "ex0.h"
+   2          #include <STC89C5xRC.H>
+   3          void init_inter0  ()         //中断初始化： 配置和启动外部中断0，即INT0
+   4          {
+   5   1       IT0 = 0;                    // 低电平触发
+   6   1       EX0 = 1;                    // 启用外部中断0
+   7   1       EA = 1;  //IE=0X80;                   // 启用总中断，EA相当于所有中断的总开关
+   8   1      }
+   9           
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =      7    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

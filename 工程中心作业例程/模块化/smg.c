@@ -1,0 +1,34 @@
+#include <reg52.h>
+#include "delay.h"
+
+sbit LSA=P2^4;
+sbit LSB=P2^5;
+sbit LSC=P2^6;
+sbit LSD=P2^7;
+
+void smg(unsigned char x,y)
+{
+ unsigned char a[17]={~0x3f,~0x06,~0x5b,~0x4f,~0x66,~0x6d,~0x7d,~0x07,~0x7f,~0x6f,~0x77,~0x7c,~0x39,~0x5e,~0x79,~0x71};//段选
+ switch(x)
+ {
+  case 1:LSA=0;LSB=1;LSC=1;LSD=1;break;//位选
+  case 2:LSA=1;LSB=0;LSC=1;LSD=1;break;
+  case 3:LSA=1;LSB=1;LSC=0;LSD=1;break;
+  case 4:LSA=1;LSB=1;LSC=1;LSD=0;break;
+ }
+ P0=a[y];
+ delay(100);
+}
+void smg1(unsigned char x,y)//末尾加上小数点
+{
+ unsigned char a[17]={~0x3f&0x7f,~0x06&0x7f,~0x5b&0x7f,~0x4f&0x7f,~0x66&0x7f,~0x6d&0x7f,~0x7d&0x7f,~0x07&0x7f,~0x7f&0x7f,~0x6f&0x7f,~0x77&0x7f,~0x7c&0x7f,~0x39&0x7f,~0x5e&0x7f,~0x79&0x7f,~0x71&0x7f};//段选且加上小数点
+ switch(x)
+ {
+  case 1:LSA=0;LSB=1;LSC=1;LSD=1;break;//位选
+  case 2:LSA=1;LSB=0;LSC=1;LSD=1;break;
+  case 3:LSA=1;LSB=1;LSC=0;LSD=1;break;
+  case 4:LSA=1;LSB=1;LSC=1;LSD=0;break;
+ }
+ P0=a[y];
+ delay(100);
+}

@@ -1,0 +1,144 @@
+BL51 BANKED LINKER/LOCATER V6.22                                                        01/02/2018  20:55:22  PAGE 1
+
+
+BL51 BANKED LINKER/LOCATER V6.22, INVOKED BY:
+C:\KEIL\C51\BIN\BL51.EXE STARTUP.obj, smg.obj TO smg
+
+
+MEMORY MODEL: SMALL
+
+
+INPUT MODULES INCLUDED:
+  STARTUP.obj (?C_STARTUP)
+  smg.obj (SMG)
+  C:\KEIL\C51\LIB\C51S.LIB (?C_INIT)
+
+
+LINK MAP OF MODULE:  smg (?C_STARTUP)
+
+
+            TYPE    BASE      LENGTH    RELOCATION   SEGMENT NAME
+            -----------------------------------------------------
+
+            * * * * * * *   D A T A   M E M O R Y   * * * * * * *
+            REG     0000H     0008H     ABSOLUTE     "REG BANK 0"
+            DATA    0008H     000CH     UNIT         ?DT?SMG
+                    0014H     000CH                  *** GAP ***
+            BIT     0020H.0   0000H.1   UNIT         ?BI?SMG
+                    0020H.1   0000H.7                *** GAP ***
+            IDATA   0021H     0001H     UNIT         ?STACK
+
+            * * * * * * *   C O D E   M E M O R Y   * * * * * * *
+            CODE    0000H     0003H     ABSOLUTE     
+                    0003H     0008H                  *** GAP ***
+            CODE    000BH     0003H     ABSOLUTE     
+            CODE    000EH     008CH     UNIT         ?C_C51STARTUP
+            CODE    009AH     0023H     UNIT         ?PR?MAIN?SMG
+            CODE    00BDH     001BH     UNIT         ?PR?T0SER?SMG
+            CODE    00D8H     000DH     UNIT         ?C_INITSEG
+
+
+
+OVERLAY MAP OF MODULE:   smg (?C_STARTUP)
+
+
+SEGMENT
+  +--> CALLED SEGMENT
+---------------------
+?C_C51STARTUP
+  +--> ?PR?MAIN?SMG
+  +--> ?C_INITSEG
+
+
+
+SYMBOL TABLE OF MODULE:  smg (?C_STARTUP)
+
+  VALUE           TYPE          NAME
+  ----------------------------------
+
+  -------         MODULE        ?C_STARTUP
+  C:000EH         SEGMENT       ?C_C51STARTUP
+  I:0021H         SEGMENT       ?STACK
+BL51 BANKED LINKER/LOCATER V6.22                                                      01/02/2018  20:55:22  PAGE 2
+
+
+  C:0000H         PUBLIC        ?C_STARTUP
+  D:00E0H         SYMBOL        ACC
+  D:00F0H         SYMBOL        B
+  D:0083H         SYMBOL        DPH
+  D:0082H         SYMBOL        DPL
+  N:0000H         SYMBOL        IBPSTACK
+  N:0100H         SYMBOL        IBPSTACKTOP
+  N:0080H         SYMBOL        IDATALEN
+  C:0011H         SYMBOL        IDATALOOP
+  N:0000H         SYMBOL        PBPSTACK
+  N:0100H         SYMBOL        PBPSTACKTOP
+  N:0000H         SYMBOL        PDATALEN
+  N:0000H         SYMBOL        PDATASTART
+  N:0000H         SYMBOL        PPAGE
+  N:0000H         SYMBOL        PPAGEENABLE
+  D:00A0H         SYMBOL        PPAGE_SFR
+  D:0081H         SYMBOL        SP
+  C:000EH         SYMBOL        STARTUP1
+  N:0000H         SYMBOL        XBPSTACK
+  N:0000H         SYMBOL        XBPSTACKTOP
+  N:0000H         SYMBOL        XDATALEN
+  N:0000H         SYMBOL        XDATASTART
+  C:0000H         LINE#         126
+  C:000EH         LINE#         133
+  C:0010H         LINE#         134
+  C:0011H         LINE#         135
+  C:0012H         LINE#         136
+  C:0014H         LINE#         185
+  C:0017H         LINE#         196
+  -------         ENDMOD        ?C_STARTUP
+
+  -------         MODULE        SMG
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:00A0H         PUBLIC        P2
+  D:00A8H         PUBLIC        IE
+  C:009AH         PUBLIC        main
+  C:00BDH         PUBLIC        T0Ser
+  D:0089H         PUBLIC        TMOD
+  B:0020H.0       PUBLIC        sec
+  D:0008H         PUBLIC        cnt
+  D:008CH         PUBLIC        TH0
+  D:008AH         PUBLIC        TL0
+  B:0088H.4       PUBLIC        TR0
+  D:0009H         PUBLIC        zxm
+  D:0013H         PUBLIC        n
+  -------         PROC          T0SER
+  C:00BDH         LINE#         7
+  C:00C1H         LINE#         9
+  C:00C4H         LINE#         10
+  C:00C7H         LINE#         12
+  C:00CEH         LINE#         13
+  C:00CEH         LINE#         14
+  C:00D1H         LINE#         15
+  C:00D3H         LINE#         16
+  C:00D3H         LINE#         17
+  -------         ENDPROC       T0SER
+  -------         PROC          MAIN
+BL51 BANKED LINKER/LOCATER V6.22                                                      01/02/2018  20:55:22  PAGE 3
+
+
+  C:009AH         LINE#         20
+  C:009AH         LINE#         21
+  C:009AH         LINE#         22
+  C:009DH         LINE#         23
+  C:00A0H         LINE#         24
+  C:00A2H         LINE#         25
+  C:00A2H         LINE#         26
+  C:00A2H         LINE#         27
+  C:00A5H         LINE#         28
+  C:00A5H         LINE#         29
+  C:00A7H         LINE#         30
+  C:00AFH         LINE#         32
+  C:00B8H         LINE#         33
+  C:00BBH         LINE#         35
+  C:00BBH         LINE#         36
+  -------         ENDPROC       MAIN
+  -------         ENDMOD        SMG
+
+Program Size: data=21.1 xdata=0 code=221
+LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)

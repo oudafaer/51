@@ -1,5 +1,0 @@
-"main.obj",
-"public.obj",
-"temp.obj" 
-TO "template" 
-RAMSIZE(256) 

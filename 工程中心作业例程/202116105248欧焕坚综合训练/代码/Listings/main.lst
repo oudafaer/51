@@ -1,0 +1,125 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              03/06/2022 14:39:38 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: E:\SCM\keil 4\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\m
+                    -ain.lst) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "reg52.h"
+   2          #include "IR.h"
+   3          #include "DS18B20.h"
+   4          #include "AT24C02.h"
+   5          #include "BMP.h"
+   6          #include "oled.h"
+   7          
+   8          float T;
+   9          unsigned int Temp[4];
+  10          unsigned char Address,Command;
+  11          unsigned State;
+  12          unsigned StateT;
+  13          
+  14          void main()
+  15          {
+  16   1              OLED_Init();
+  17   1              OLED_Clear();
+  18   1              IR_Init();
+  19   1              while(1)
+  20   1              {
+  21   2                      T=DS18B20_ReadT();
+  22   2                      DS18B20_ConvertT();             
+  23   2                      Temp[0]=T;
+  24   2                      Temp[1]=T*100.0;
+  25   2                      if(IR_GetDataFlag())
+  26   2                      {
+  27   3                              Address=IR_GetAddress();
+  28   3                              Command=IR_GetCommand();
+  29   3                              if(Command==IR_POWER)
+  30   3                              {
+  31   4                                      State++;
+  32   4                                      State%=2;
+  33   4                              }
+  34   3                              if(Command==IR_EQ)
+  35   3                              {
+  36   4                              AT24C02_WriteByte(0,Temp[0]%256);
+  37   4                              Delay_1ms(5);
+  38   4                              AT24C02_WriteByte(1,(Temp[1]%1000)%256);
+  39   4                              Delay_1ms(5) ;                          
+  40   4                              }
+  41   3                              if(Command==IR_MODE)
+  42   3                              {
+  43   4                                      OLED_Clear();
+  44   4                                      StateT++;
+  45   4                                      StateT%=2;
+  46   4                              }
+  47   3                      }
+  48   2                      if(State==0)
+  49   2                      {
+  50   3                              OLED_Clear();
+  51   3                      }
+  52   2                      if(State==1 && StateT==0)
+  53   2                      {
+  54   3                              OLED_ShowCHinese(0,0,0);
+C51 COMPILER V9.59.0.0   MAIN                                                              03/06/2022 14:39:38 PAGE 2   
+
+  55   3                              OLED_ShowCHinese(18,0,1);
+  56   3                              OLED_ShowCHinese(36,0,2);
+  57   3                              OLED_ShowCHinese(54,0,3);                               
+  58   3                                      
+  59   3                              OLED_ShowCHinese(0,3,9);
+  60   3                              OLED_ShowCHinese(18,3,6);
+  61   3                              OLED_ShowChar(36,3,':',16);
+  62   3                              OLED_ShowNum(54,3,T,2,16);
+  63   3                              OLED_ShowChar(70,3,'.',16);
+  64   3                              OLED_ShowNum(80,3,(unsigned long)(T*10000)%10000,3,16);
+  65   3      
+  66   3                              Temp[2]=AT24C02_ReadByte(0);
+  67   3                              Temp[3]=AT24C02_ReadByte(1);
+  68   3                      OLED_ShowCHinese(0,6,4);
+  69   3                              OLED_ShowCHinese(18,6,5);
+  70   3                              OLED_ShowChar(36,6,':',16);
+  71   3                              OLED_ShowNum(54,6,Temp[2],2,16);
+  72   3                              OLED_ShowChar(70,6,'.',16);
+  73   3                              OLED_ShowNum(80,6,Temp[3],3,16);
+  74   3                      }
+  75   2                      if(State==1 && StateT==1)
+  76   2                      {
+  77   3                              OLED_ShowCHinese(0,0,7);
+  78   3                              OLED_ShowCHinese(18,0,8);
+  79   3                              OLED_ShowCHinese(36,0,1);
+  80   3                              
+  81   3                                      
+  82   3                              OLED_ShowCHinese(0,3,9);
+  83   3                              OLED_ShowCHinese(18,3,6);
+  84   3                              OLED_ShowChar(36,3,':',16);
+  85   3                              OLED_ShowNum(54,3,((T*1.8)+32),2,16);
+  86   3                              OLED_ShowChar(70,3,'.',16);
+  87   3                              OLED_ShowNum(80,3,((unsigned long)(T*10000)%10000*1.8),3,16);
+  88   3      
+  89   3                              Temp[2]=AT24C02_ReadByte(0);
+  90   3                              Temp[3]=AT24C02_ReadByte(1);
+  91   3                      OLED_ShowCHinese(0,6,4);
+  92   3                              OLED_ShowCHinese(18,6,5);
+  93   3                              OLED_ShowChar(36,6,':',16);
+  94   3                              OLED_ShowNum(54,6,((Temp[2]*1.8)+32),2,16);
+  95   3                              OLED_ShowChar(70,6,'.',16);
+  96   3                              OLED_ShowNum(80,6,(Temp[3]*1.8),3,16);
+  97   3                      }
+  98   2              }
+  99   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    855    ----
+   CONSTANT SIZE    =   1024    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     18    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

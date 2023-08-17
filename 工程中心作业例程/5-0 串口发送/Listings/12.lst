@@ -1,0 +1,177 @@
+C51 COMPILER V9.59.0.0   12                                                                01/29/2022 01:22:31 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE 12
+OBJECT MODULE PLACED IN .\Objects\12.obj
+COMPILER INVOKED BY: E:\SCM\keil 4\C51\BIN\C51.EXE 12.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\12.
+                    -lst) OBJECT(.\Objects\12.obj)
+
+line level    source
+
+   1          #include <reg52.h>
+   2          
+   3          //函数声明
+   4          void Uart_Init(void);
+   5          void Uart_Send_Byte(unsigned char c);
+   6          void Uart_send_string(unsigned char *dat);
+   7          //unsigned char Uart_Receive_Byte();  发送字符串函数
+   8          void Uart_action(void);
+   9          
+  10          //LED位定义，八个LED对应八个IO口
+  11          sbit led0=P1^0;
+  12          sbit led1=P1^1;
+  13          sbit led2=P1^2;
+  14          sbit led3=P1^3;
+  15          sbit led4=P1^4;
+  16          sbit led5=P1^5;
+  17          sbit led6=P1^6;
+  18          sbit led7=P1^7;
+  19          
+  20          //开始接收与停止接收标志位，bit 是位定义
+  21          bit Start_Receiving=0,Stop_Receiving=0;
+  22          
+  23          //接收数据缓存数组定义，用于存放从串口接收到的指令数据
+  24          unsigned char Buffer[10];   // 空数组
+  25          
+  26          //主函数
+  27          void main()
+  28          {
+  29   1              //八个LED初始化设置为高电平（熄灭状态）
+  30   1              led0 = 1;
+  31   1              led1 = 1;
+  32   1              led2 = 1;
+  33   1              led3 = 1;
+  34   1              led4 = 1;
+  35   1              led5 = 1;
+  36   1              led6 = 1;
+  37   1              led7 = 1;
+  38   1              
+  39   1              //串口相关参数初始化设置
+  40   1              Uart_Init();
+  41   1              
+  42   1              //主循环
+  43   1              while(1)
+  44   1              {
+  45   2                      Uart_action();              //进行串口接收数据分析及相应的动作
+  46   2              }
+  47   1      }
+  48          
+  49          //串口参数初始化设置函数
+  50          void Uart_Init(void)
+  51          {
+  52   1          SCON=0x50;                  //串口工作方式1:10位异步收发器，1位起始位，8位数据位，1位停止位;REN=1:允许
+             -接收 
+  53   1      //    PCON=0x00;4800 9600                //SMOD=0:波特率不加倍 
+C51 COMPILER V9.59.0.0   12                                                                01/29/2022 01:22:31 PAGE 2   
+
+  54   1          TMOD=0x20;                  //定时器T1工作方式2，8位自动重装载定时器/计数器，用于UART波特率 
+  55   1          TH1=0xFD;                   //定时器初值设置0xFD，单片机晶振11.0592MHz，对应波特率9600
+  56   1          TL1=0x00;                   //无需设置该位，保持为0x00
+  57   1          TR1=1;                          //开启定时器T1，允许T1计数 
+  58   1              ES=1;                       //串口中断允许位置1，开启串口中断
+  59   1          EA=1;                       //总中断允许位，开启总中断
+  60   1      }
+  61          
+  62          //串口发送一个字节函数
+  63          void Uart_Send_Byte(unsigned char c)
+  64          {
+  65   1              SBUF = c;                     //将传入的数据赋值给发送缓冲器SBUF，将数据发送出去
+  66   1              while(!TI);                             //等待数据发送完成，发送完成后发送中断标志位TI被硬件置1，跳出循环
+  67   1              TI = 0;                       //发送中断标志位TI软件清零，为下次发送数据做准备
+  68   1      }
+  69          
+  70          //串口发送字符串函数
+  71          void Uart_send_string(unsigned char *dat)  
+  72          {
+  73   1              while(*dat != '\0')           //判断当前指向数据是否为'\0':字符串结束标志，不相等则执行循环内部程序，相等
+             -则跳出循环
+  74   1              {
+  75   2                      Uart_Send_Byte(*dat);       //发送1个字节数据，1个字符大小为1个字节，8位数据
+  76   2                      dat++;                      //地址加1，指向下一个字符
+  77   2              }
+  78   1      }
+  79          
+  80          ////串口接收一个字节函数
+  81          //unsigned char Uart_Receive_Byte()
+  82          //{     
+  83          //      unsigned char dat;
+  84          //      while(!RI);                     //等待数据接收完成，接收完成后接收中断标志位RI被硬件置1，跳出循环
+  85          //      RI = 0;                     //接收中断标志位RI软件清零，为接收下一个字节数据做准备
+  86          //      dat = SBUF;                 //读取接收缓冲器的值，并赋值给变量dat
+  87          //      return (dat);               //函数返回读取值
+  88          //}
+  89          
+  90          //串口中断服务程序
+  91          void Uart_interrupt(void) interrupt 4           
+  92          {
+  93   1        static char i=0;              //定义静态变量i，在下次进入此函数时，i的值不变，表示接收数据第i个字节
+  94   1              unsigned char a=0;            //定义接收数据缓存变量
+  95   1          if(RI)                      //判断接收中断标志位RI是否为1，为1则表明接收完一个字节，否则表明未接收完成
+  96   1              {                             
+  97   2                      RI=0;                       //接收中断标志位RI软件清零，为接收下一个字节数据做准备
+  98   2                      a=SBUF;                     //读取接收缓冲器的值，并赋值给变量dat
+  99   2                                                  
+ 100   2                      if(a==0xD1)                 //判断是否接收到指令开头第一个字节0xD1，是则开始接收下面的数据，否则不开始接
+             -收
+ 101   2                      {Start_Receiving=1;}        //开始接收数据标志位置1，表明现在是开始接收数据状态
+ 102   2                                                  
+ 103   2                      else if(a==0x0D)                  //判断是否接收到指令结束最后一个字节回车0x0D，是则停止接收，否则继续接收
+ 104   2                      {                           
+ 105   3                              Stop_Receiving=1;         //结束接收数据标志位置1，表明现在是结束接收数据状态
+ 106   3                              Start_Receiving=0;        //开始接收数据标志位清0，表明现在已经不再接收数据
+ 107   3                              i=0;                      //接收字节数清0，为接收下一条指令做准备
+ 108   3                      }                           
+ 109   2                                      
+ 110   2                      if(Start_Receiving==1)      //判断开始接收数据标志位是否为1，为1则表明是开始接收数据状态，并开始进行存放
+             -数据，否则表明不再接收和存放数据
+ 111   2                      {                           
+ 112   3                               Buffer[i]=a;             //将接收到的数据存放在接收缓存数组Buffer中
+C51 COMPILER V9.59.0.0   12                                                                01/29/2022 01:22:31 PAGE 3   
+
+ 113   3                               i++;                     //接收字节数加1                               
+ 114   3                      }
+ 115   2                      
+ 116   2         }
+ 117   1      }
+ 118          
+ 119          //串口动作函数
+ 120          void Uart_action(void)
+ 121          {
+ 122   1              unsigned char reply[]="receive success！\n";
+ 123   1              
+ 124   1        if(Stop_Receiving)            //判断结束接收数据标志位是否为1，为1则表明是结束接收数据状态，并开始进行分
+             -析数据，否则表明不再接收和存放数据
+ 125   1              {
+ 126   2                      Uart_send_string(reply);    //串口发送字符串"receive success！\n"
+ 127   2          Stop_Receiving=0;           //停止接收标志位清零，为下次分析指令数据做准备
+ 128   2                      
+ 129   2                      switch(Buffer[1])           //接收缓存数组第2个字节数值开关
+ 130   2                      {
+ 131   3                              //1.根据接收缓存数组第2个字节的数值进行选择
+ 132   3                              //2.根据接收缓存数组第3个字节的数值进行相应的操作，为0则点亮LED，为非0值则熄灭LED
+ 133   3            case 0x01: if(Buffer[2]==0){led0=0;} else{led0=1;} break;
+ 134   3            case 0x02: if(Buffer[2]==0){led1=0;} else{led1=1;} break;
+ 135   3            case 0x03: if(Buffer[2]==0){led2=0;} else{led2=1;} break;
+ 136   3            case 0x04: if(Buffer[2]==0){led3=0;} else{led3=1;} break;
+ 137   3            case 0x05: if(Buffer[2]==0){led4=0;} else{led4=1;} break;
+ 138   3            case 0x06: if(Buffer[2]==0){led5=0;} else{led5=1;} break;
+ 139   3            case 0x07: if(Buffer[2]==0){led6=0;} else{led6=1;} break;
+ 140   3            case 0x08: if(Buffer[2]==0){led7=0;} else{led7=1;} break;
+ 141   3                              default: break;
+ 142   3          }
+ 143   2        }
+ 144   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    303    ----
+   CONSTANT SIZE    =     19    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     11      19
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      2    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

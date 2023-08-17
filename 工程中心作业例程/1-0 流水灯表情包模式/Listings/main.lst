@@ -1,0 +1,82 @@
+C51 COMPILER V9.54   MAIN                                                                  08/03/2022 13:18:05 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: E:\MDK5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main.ls
+                    -t) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include <reg52.h> 
+   2          #define uint unsigned int                                                 //对数据类型进行声明定义
+   3          #define uchar unsigned char
+   4          //定义LED灯端口
+   5          sbit led1 = P1^0;
+   6          sbit led2 = P1^1;
+   7          sbit led3 = P1^2;
+   8          sbit led4 = P1^3;
+   9          
+  10          //读取按键
+  11          uchar key_scanf()
+  12          {
+  13   1         static int Key_on_off = 0 ;//按键自锁变量
+  14   1         uchar  num , temp ;
+  15   1         num = P2 ;            //将P2的值存在变量num中
+  16   1         num &= 0xf0 ;        //将低四位清0
+  17   1         if(num != 0xf0)
+  18   1         {
+  19   2                if(Key_on_off == 0)
+  20   2                {
+  21   3                       Key_on_off = 1 ;
+  22   3                       switch(num)
+  23   3                       {
+  24   4                              //返回按键的编码
+  25   4                              case 0xe0 : temp = 1 ; break ; 
+  26   4                              case 0xd0 : temp = 2 ; break ; 
+  27   4                              case 0xb0 : temp = 3 ; break ; 
+  28   4                              case 0x70 : temp = 4 ; break ; 
+  29   4                       }
+  30   3                }   
+  31   2         }
+  32   1         else
+  33   1               Key_on_off = 0 ;
+  34   1              return temp  ;
+  35   1      }
+  36          //主函数
+  37          void main()
+  38          {
+  39   1              int Key_value;
+  40   1              led1=0;
+  41   1              led2=0;
+  42   1              led3=0;
+  43   1              led4=0;
+  44   1              while(1)
+  45   1              {       
+  46   2                      Key_value=key_scanf();
+  47   2                       switch(Key_value)
+  48   2                       {
+  49   3                              //返回按键的编码
+  50   3                              case 1 : led1 = ~led1 ; break ; 
+  51   3                              case 2 : led2 = ~led2 ; break ; 
+  52   3                              case 3 : led3 = ~led3 ; break ; 
+  53   3                              case 4 : led4 = ~led4 ; break ; 
+  54   3                       }
+C51 COMPILER V9.54   MAIN                                                                  08/03/2022 13:18:05 PAGE 2   
+
+  55   2              }
+  56   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    107    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

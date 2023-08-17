@@ -1,7 +1,0 @@
-".\Objects\main.obj",
-".\Objects\smg.obj",
-".\Objects\Timer0.obj",
-".\Objects\key.obj",
-".\Objects\delay.obj" 
-TO ".\Objects\project" 
-PRINT(".\Listings\project.m51") RAMSIZE(256) 

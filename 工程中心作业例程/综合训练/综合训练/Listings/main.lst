@@ -1,0 +1,96 @@
+C51 COMPILER V9.60.0.0   MAIN                                                              04/13/2022 16:41:01 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: E:\MDK5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main.ls
+                    -t) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "reg52.h"
+   2          #include "IR.h"
+   3          #include "LCD1602.h"
+   4          #include "DS18B20.h"
+   5          #include "AT24C02.h"
+   6          #include "Delay.h"
+   7          
+   8          float T;
+   9          unsigned int Temp[4];
+  10          unsigned char Address,Command;
+  11          unsigned State;
+  12          void main()
+  13          {
+  14   1              IR_Init();
+  15   1              LCD_Init();
+  16   1              while(1)
+  17   1              {
+  18   2                      Temp[0]=T;
+  19   2                      Temp[1]=T*100.0;
+  20   2                      if(IR_GetDataFlag() |IR_GetRepeatFlag())
+  21   2                      {
+  22   3                              Address=IR_GetAddress();
+  23   3                              Command=IR_GetCommand();
+  24   3                              if(Command==IR_0)
+  25   3                              {
+  26   4                                      State=0;
+  27   4                              }
+  28   3                              if(Command==IR_1)
+  29   3                              {
+  30   4                                      State=1;
+  31   4                              }
+  32   3                              if(Command==IR_2)
+  33   3                              {
+  34   4                                      State=2;
+  35   4                              }
+  36   3                              if(Command==IR_3)
+  37   3                              {
+  38   4                                      State=3;
+  39   4                              }                       
+  40   3                      }
+  41   2                      if(State==0)
+  42   2                      {
+  43   3                              LCD_WriteCommand(0x01);//光标复位，清屏
+  44   3                      }               
+  45   2                      if(State==1)
+  46   2                      {
+  47   3                              DS18B20_ConvertT();
+  48   3                              T=DS18B20_ReadT();
+  49   3                              LCD_ShowNum(2,2,T,3);           //显示温度整数部分
+  50   3                              LCD_ShowChar(2,5,'.');          //显示小数点
+  51   3                              LCD_ShowNum(2,6,(unsigned long)(T*10000)%10000,4);//显示温度小数部分                            
+  52   3                      }
+  53   2                      if(State==2)
+  54   2                      {
+C51 COMPILER V9.60.0.0   MAIN                                                              04/13/2022 16:41:01 PAGE 2   
+
+  55   3                              AT24C02_WriteByte(0,Temp[0]%256);
+  56   3                              delay(5);
+  57   3                              AT24C02_WriteByte(1,(Temp[1]%100)%256);
+  58   3                              delay(5);               
+  59   3                      }               
+  60   2                      if(State==3)
+  61   2                      {
+  62   3                              Temp[2]=AT24C02_ReadByte(0);
+  63   3                              Temp[3]=AT24C02_ReadByte(1);
+  64   3                              LCD_ShowNum(2,2,Temp[2],3);             //显示温度整数部分
+  65   3                              LCD_ShowChar(2,5,'.');          //显示小数点
+  66   3                              LCD_ShowNum(2,6,Temp[3],2);//显示温度小数部分   
+  67   3                      }
+  68   2      
+  69   2              }
+  70   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    331    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     16    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

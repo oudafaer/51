@@ -1,0 +1,136 @@
+C51 COMPILER V9.60.0.0   L298N                                                             04/12/2022 22:35:16 PAGE 1   
+
+
+C51 COMPILER V9.60.0.0, COMPILATION OF MODULE L298N
+OBJECT MODULE PLACED IN .\Objects\L298N.obj
+COMPILER INVOKED BY: E:\MDK5\C51\BIN\C51.EXE L298N.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\L298N.
+                    -lst) OBJECT(.\Objects\L298N.obj)
+
+line level    source
+
+   1          #include "reg52.h"
+   2          #include "L298N.h"
+   3          
+   4          sbit IN1 = P1^0; // 左上
+   5          sbit IN2 = P1^1; // 左下
+   6          sbit IN3 = P1^2; // 右上
+   7          sbit IN4 = P1^3; // 右上
+   8          sbit ENA = P1^4; //使能A
+   9          sbit ENB = P1^5; //使能B
+  10          
+  11          sbit out0 = P2^0; // 右边避障，有障碍物就亮，输出0
+  12          sbit out1 = P2^1; // 左边避障，有障碍物就亮，输出0
+  13          
+  14          static unsigned char speed = 100; //设置速度初始值
+  15          
+  16          
+  17          void stop() // 停
+  18          {
+  19   1              IN1=0;
+  20   1              IN2=0;
+  21   1              IN3=0;
+  22   1              IN4=0;
+  23   1      }
+  24           
+  25          void forward() // 向前
+  26          {
+  27   1              IN1=1;
+  28   1              IN2=0;
+  29   1              IN3=1;
+  30   1              IN4=0;    
+  31   1      }
+  32           
+  33          void back() // 向后
+  34          {
+  35   1              IN1=0;
+  36   1              IN2=1;
+  37   1              IN3=0;
+  38   1              IN4=1;  
+  39   1      }
+  40           
+  41          void left() // 向左，只有左轮动
+  42          {
+  43   1              IN1=1;
+  44   1              IN2=0;
+  45   1              IN3=1;
+  46   1              IN4=1;
+  47   1      }
+  48           
+  49          void avoid_left()//向左，左右伦同时转动
+  50          {
+  51   1              IN1=1;
+  52   1              IN2=0;
+  53   1              IN3=0;
+  54   1              IN4=1;
+C51 COMPILER V9.60.0.0   L298N                                                             04/12/2022 22:35:16 PAGE 2   
+
+  55   1      }
+  56           
+  57          void right() // 向右，只有右轮动
+  58          {
+  59   1              IN1=1;
+  60   1              IN2=1;
+  61   1              IN3=1;
+  62   1              IN4=0;
+  63   1      }
+  64           
+  65          void avoid_right()//向左，左右伦同时转动
+  66          {
+  67   1              IN1=0;
+  68   1              IN2=1;
+  69   1              IN3=1;
+  70   1              IN4=0;
+  71   1      }
+  72          void increase(void)//加速
+  73          {
+  74   1              speed += 5; // 每次增加5
+  75   1              if(speed >= 100) // 上限是100
+  76   1              {
+  77   2                      speed = 100;
+  78   2              }
+  79   1      }
+  80                  
+  81          void reduce(void)//减速
+  82          {
+  83   1              speed -= 5; // 每次减少5
+  84   1              if(speed <= 0) // 下限是0
+  85   1              {
+  86   2                      speed = 0;
+  87   2              }
+  88   1      }
+  89           
+  90          void avoid(void)//避障模式
+  91          {
+  92   1              if(out0 == 0) // 右边有障碍物，左转
+  93   1              {
+  94   2                      avoid_left();
+  95   2              }
+  96   1              if(out1 == 0) // 左边有障碍物，右转
+  97   1              {
+  98   2                      avoid_right();
+  99   2              }
+ 100   1              if(out0 == 1 && out1 == 1) // 没有障碍物，前进
+ 101   1              {
+ 102   2                       forward();
+ 103   2              }
+ 104   1              if(out0 == 0 && out1 == 0) // 有障碍物，停止
+ 105   1              {
+ 106   2                       stop();
+ 107   2              }
+ 108   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    132    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1    ----
+C51 COMPILER V9.60.0.0   L298N                                                             04/12/2022 22:35:16 PAGE 3   
+
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,106 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              12/11/2021 16:42:35 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: E:\SCM\keil 4\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\m
+                    -ain.lst) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include <reg52.h>
+   2          #include "delay.h"
+   3          #include "oneWire.h"
+   4          #include "DS18B20.h"
+   5          
+   6          unsigned char HANZI[6] = "温度为";   //定义汉字数组
+   7          void send(int);                      //定义串口发送数据类型
+   8          
+   9          //设置串口初始化
+  10          void UsarInit()
+  11          {
+  12   1              PCON &= 0x7F;           //波特率不倍速
+  13   1              SCON = 0x50;            //8位数据,可变波特率
+  14   1              TMOD &= 0x0F;           //清除定时器1模式位
+  15   1              TMOD |= 0x20;           //设定定时器1为8位自动重装方式
+  16   1              TL1 = 0xFA;             //设定定时初值
+  17   1              TH1 = 0xFA;             //设定定时器重装值
+  18   1              ET1 = 0;                //禁止定时器1中断
+  19   1              TR1 = 1;                //启动定时器1
+  20   1              EA=1;
+  21   1              ES=1;
+  22   1              
+  23   1      }
+  24          //主函数
+  25          void main()
+  26          {
+  27   1              UsarInit();
+  28   1              while(1)
+  29   1              {
+  30   2                      send(Ds18b20ReadTemp());
+  31   2                      Delay1ms(1000);                     //1s钟发送一次
+  32   2              }
+  33   1      }
+  34          
+  35          //温度数据类型转换和串口发送
+  36          void send(int temp)      
+  37          {
+  38   1          
+  39   1              unsigned char i, wendu[] = {0, 0, 0, 0, 0}; //定义存储温度的数组
+  40   1              float tp;       
+  41   1              tp=temp;                                   //将温度赋给一个浮点型变量
+  42   1              temp=(tp/16*100)+0.5;                      //将浮点型数值扩大
+  43   1              wendu[0] = temp / 10000;                   //得到百位
+  44   1              wendu[1] = temp % 10000 / 1000;            //得到十位
+  45   1              wendu[2] = temp % 1000 / 100;              //得到个位
+  46   1              wendu[3] = temp % 100 / 10;                //得到小数点后第一位
+  47   1              wendu[4] = temp % 10;                      //得到小数点后第二位
+  48   1              for(i=0; i<6; i++)
+  49   1              {
+  50   2                      SBUF = HANZI[i];//发送汉字
+  51   2                      while (!TI);                         
+  52   2                      TI = 0;
+  53   2              }    
+  54   1              SBUF = '0'+wendu[0];//发送第一位数字
+C51 COMPILER V9.59.0.0   MAIN                                                              12/11/2021 16:42:35 PAGE 2   
+
+  55   1              while (!TI);                       
+  56   1              TI = 0;
+  57   1      
+  58   1              SBUF = '0'+wendu[1];//发送第二位数字
+  59   1              while (!TI);
+  60   1              TI = 0;
+  61   1      
+  62   1              SBUF = '0'+wendu[2];//发送第三位数字
+  63   1              while (!TI);                           
+  64   1              TI = 0;
+  65   1      
+  66   1      
+  67   1              SBUF = '.';//发送小数点
+  68   1              while (!TI);                          
+  69   1              TI = 0;
+  70   1      
+  71   1       
+  72   1              SBUF = '0'+wendu[3];//发送小数点后第一位数字
+  73   1              while (!TI);                          
+  74   1              TI = 0;
+  75   1      
+  76   1              SBUF = '0'+wendu[4];//发送小数点后第二位数字
+  77   1              while (!TI);                        
+  78   1              TI = 0; 
+  79   1      }
+  80          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    303    ----
+   CONSTANT SIZE    =      5    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      6       7
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
